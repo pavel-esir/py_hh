@@ -1,0 +1,8 @@
+*.o
+py_hh.cpp
+*.so
+.*
+!.project
+!.cproject
+!.pydevproject
+!.gitignore
