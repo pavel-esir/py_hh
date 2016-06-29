@@ -16,7 +16,7 @@ tframes = np.linspace(0, SimTime, Tsim)
 
 Nneur = 2
 tau_psc = 0.2
-w_p = 1.
+w_p = 0.0
 rate = 100
 
 setCalcParams(Tsim, Nneur, 1, 1, h)
@@ -28,8 +28,8 @@ ms = np.zeros(Nneur) + 0.913177
 hs = np.zeros(Nneur) + 0.223994
 
 spike_times = np.zeros((int(SimTime/10), Nneur), dtype='uint32')
-weight = np.array([1.])
-delay = np.array([0], dtype='uint32')
+weight = np.array([1.*np.e/tau_psc])
+delay = np.array([5/h], dtype='uint32')
 pre = np.array([0], dtype='uint32')
 post = np.array([1], dtype='uint32')
 
@@ -49,7 +49,7 @@ setConns(weight, delay,  pre, post)
 simulate()
 
 pl.figure()
-pl.plot(tframes, Vrec[:, 0])
+pl.plot(tframes, Vrec[:, :])
 pl.xlabel('time, ms')
 pl.ylabel('Membrane potential, mV')
 pl.show()

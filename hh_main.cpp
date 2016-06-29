@@ -187,9 +187,11 @@ namespace hh{
                 num_spike_neur[n]++;
             }
         }
+        V_m_last[n] = V_mem;
 
         if (t % recInt == 0){
             Vrec[Nneur*t/recInt + n] = V_m[n];
+//            Vrec[Nneur*t/recInt + n] = I_syn[n];
         }
 
     }
@@ -200,12 +202,12 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, u
     hh::Nneur = Nneur;
     hh::recInt = recInt;
     hh::h = h;
-    hh::Vrec = new double[Nneur];
+    hh::V_m_last = new double[Nneur];
     hh::psn_time = new unsigned int[Nneur];
     hh::psn_seed = new unsigned int[Nneur];
     hh::Inoise = new double[Nneur];
-    hh::num_spike_neur = new unsigned int[Nneur];
-    hh::num_spike_syn = new unsigned int[Ncon];
+    hh::num_spike_neur = new unsigned int[Nneur]();
+    hh::num_spike_syn = new unsigned int[Ncon]();
 }
 
 void set_spike_times(unsigned int *spike_time){
@@ -245,6 +247,9 @@ void simulate_cpp(){
     for (unsigned int t = 0; t < Tsim; t++){
         for (unsigned int i = 0; i < Nneur; i++){
             integrate_neurons(t, i);
+        }
+        for (unsigned int i = 0; i < Nneur; i++){
+            integrate_synapses(t, i);
         }
     }
 }
