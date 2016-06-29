@@ -1,0 +1,227 @@
+/*
+ * hh_main.cpp
+ *
+ *  Created on: 27 июня 2016 г.
+ *      Author: Pavel Esir
+ */
+
+#include <cmath>
+#include "hh_main.h"
+#include <cstdio>
+
+#define Cm_    1.0 //  inverse of membrane capacity, 1/pF
+#define g_Na  120.0 // nS
+#define g_K   36.0
+#define g_L   0.3
+#define E_K   -77.0
+#define E_Na  55.0
+#define E_L   -54.4
+#define V_peak 25.0
+
+namespace hh{
+
+    unsigned int Tsim;
+    unsigned int Nneur;
+    unsigned int recInt;
+    double h;
+
+    double *V_m;
+    double *V_m_last;
+    double *Vrec;
+    double *n_ch, *m_ch, *h_ch;
+    unsigned int *spike_time, *num_spike_neur;
+
+    double *I_e;
+    double *y, *I_syn;
+    double rate;
+    double tau_psc;
+    double exp_psc;
+    double *d_w_p;
+    unsigned int *psn_time, *psn_seed;
+
+    double *Inoise;
+    double tau_cor = 0.2;
+    double *D;
+
+    double get_random(unsigned int *seed){
+        // Park-Miller generator
+        // return random number homogeneously distributed in interval [0:1)
+        unsigned long a = 16807;
+        unsigned long m = 2147483647;
+        unsigned long x = (unsigned long) *seed;
+        x = (a * x) % m;
+        *seed = (unsigned int) x;
+        return ((double) x)/m;
+    }
+
+    double hh_Vm(double V, double n_ch, double m_ch, double h_ch, double I_syn, double I_e, double h){
+        return (I_e - g_K*(V - E_K)*n_ch*n_ch*n_ch*n_ch - g_Na*(V - E_Na)*m_ch*m_ch*m_ch*h_ch - g_L*(V - E_L) + I_syn)*h*Cm_;
+    }
+
+    double hh_n_ch(double V, double n_ch, double h){
+        double temp = 1.0 - exp(-(V + 55.0)*0.1);
+        if (temp != 0.0){
+            return (.01*(1.0 - n_ch)*(V + 55.0)/temp - 0.125*n_ch*exp(-(V + 65.0)*0.0125))*h;
+        } else {
+    //      printf("dividing to zero while calculating n! \n");
+    //      to understand why it'so, calculate the limit for v/(1 - exp(v/10)) then v tend to 0
+            return (0.1*(1.0 - n_ch)- 0.125*n_ch*exp(-(V + 65.0)*0.0125))*h;
+        }
+    }
+
+    double hh_m_ch(double V, double m_ch, double h){
+        double temp = 1.0 - exp(-(V + 40.0)*0.1);
+        if (temp != 0.0){
+            return (0.1*(1.0 - m_ch)*(V + 40.0)/temp - 4.0*m_ch*exp(-(V + 65.0)*0.055555556))*h;
+        } else {
+    //      printf("dividing to zero while calculating  m! \n");
+            return ((1.0 - m_ch) - 4.0*m_ch*exp(-(V + 65.0)*0.055555556))*h;
+        }
+    }
+
+    double hh_h_ch(double V, double h_ch, double h){
+        return (0.07*(1.0 - h_ch)*exp(-(V + 65.0)*0.05) - h_ch/(1.0 + exp(-(V + 35.0)*0.1)))*h;
+    }
+
+
+    void integrate_neurons(unsigned int t, unsigned int n){
+        double I_syn_last = I_syn[n];
+        I_syn[n]  = (y[n]*h + I_syn[n])*exp_psc;
+        y[n] *= exp_psc;
+
+        // if where is poisson impulse on neuron
+        while (psn_time[n] == t){
+            y[n] += d_w_p[n];
+            // sign of right part is negative hence here is "-="
+            psn_time[n] -= (unsigned int) (1000.0*log(get_random(psn_seed + n))/(rate*h));
+        }
+        double V_mem, n_channel, m_channel, h_channel;
+        double v1, v2, v3, v4;
+        double n1, n2, n3, n4;
+        double m1, m2, m3, m4;
+        double h1, h2, h3, h4;
+        double Inoise_;
+        double ns1, ns2, ns3, ns4;
+
+        double dNoise = 0.0;
+    //    double dNoise = sqrtf(2.0f*h*D[n])*curand_normal(&state[n]);
+
+        V_mem = V_m[n];
+        n_channel = n_ch[n];
+        m_channel = m_ch[n];
+        h_channel = h_ch[n];
+        Inoise_ = Inoise[n];
+        v1 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn_last + Inoise[n], I_e[n], h);
+        n1 = hh_n_ch(V_m[n], n_ch[n], h);
+        m1 = hh_m_ch(V_m[n], m_ch[n], h);
+        h1 = hh_h_ch(V_m[n], h_ch[n], h);
+        ns1 = (-Inoise[n]*h + dNoise)/tau_cor;
+        V_m[n] = V_mem + v1/2.0;
+        n_ch[n] = n_channel + n1/2.0;
+        m_ch[n] = m_channel + m1/2.0;
+        h_ch[n] = h_channel + h1/2.0;
+        Inoise[n] = Inoise_ + ns1/2.0;
+
+        v2 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n]+ I_syn_last)/2.0f + Inoise[n] , I_e[n], h);
+        n2 = hh_n_ch(V_m[n], n_ch[n], h);
+        m2 = hh_m_ch(V_m[n], m_ch[n], h);
+        h2 = hh_h_ch(V_m[n], h_ch[n], h);
+        ns2 = (-Inoise[n]*h + dNoise)/tau_cor;
+        V_m[n] = V_mem + v2/2.0;
+        n_ch[n] = n_channel + n2/2.0;
+        m_ch[n] = m_channel + m2/2.0;
+        h_ch[n] = h_channel + h2/2.0;
+        Inoise[n] = Inoise_ + ns2/2.0;
+
+
+        v3 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n] + I_syn_last)/2.0f + Inoise[n], I_e[n], h);
+        n3 = hh_n_ch(V_m[n], n_ch[n], h);
+        m3 = hh_m_ch(V_m[n], m_ch[n], h);
+        h3 = hh_h_ch(V_m[n], h_ch[n], h);
+        ns3 = (-Inoise[n]*h + dNoise)/tau_cor;
+        V_m[n] = V_mem + v3;
+        n_ch[n] = n_channel + n3;
+        m_ch[n] = m_channel + m3;
+        h_ch[n] = h_channel + h3;
+        Inoise[n] = Inoise_ + ns3;
+
+
+        v4 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn[n] + Inoise[n], I_e[n], h);
+        n4 = hh_n_ch(V_m[n], n_ch[n], h);
+        m4 = hh_m_ch(V_m[n], m_ch[n], h);
+        h4 = hh_h_ch(V_m[n], h_ch[n], h);
+        ns4 = (-Inoise[n]*h + dNoise)/tau_cor;
+
+        V_m[n] = V_mem + (v1 + 2.0*(v2 + v3) + v4)/6.0f;
+        n_ch[n] = n_channel + (n1 + 2.0*(n2 + n3) + n4)/6.0;
+        m_ch[n] = m_channel + (m1 + 2.0*(m2 + m3) + m4)/6.0;
+        h_ch[n] = h_channel + (h1 + 2.0*(h2 + h3) + h4)/6.0;
+        Inoise[n] = Inoise_ + (ns1 + 2.0*(ns2 + ns3) + ns4)/6.0;
+
+        // checking if there's spike on neuron
+    //    if (V_m[n] > V_peak && V_mem > V_m[n] && V_m_last[n] <= V_mem){
+    //        // second condition is necessary in the presence of noise
+    //        if (num_spike_neur[n] == 0 || t - spike_time[Nneur*(num_spike_neur[n] - 1) + n] > 5.0f/h){
+    //            spike_time[Nneur*num_spike_neur[n] + n] = t;
+    //            num_spike_neur[n]++;
+    //        }
+    //    }
+
+        if (t % recInt == 0){
+            Vrec[Nneur*t/recInt + n] = V_m[n];
+        }
+
+    }
+}
+
+void set_delays(unsigned int *delays){
+
+}
+
+void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int recInt, double h){
+    hh::Tsim = Tsim;
+    hh::Nneur = Nneur;
+    hh::recInt = recInt;
+    hh::h = h;
+    hh::Vrec = new double[Nneur];
+    hh::psn_time = new unsigned int[Nneur];
+    hh::psn_seed = new unsigned int[Nneur];
+    hh::Inoise = new double[Nneur];
+}
+
+void set_neur_vars(double *V_m, double *Vrec, double *n_ch, double *m_ch, double *h_ch){
+    hh::V_m = V_m;
+    hh::Vrec = Vrec;
+    hh::n_ch = n_ch;
+    hh::m_ch = m_ch;
+    hh::h_ch = h_ch;
+}
+
+void set_currents(double *I_e, double *y, double *I_syn, double rate, double tau_psc, double *d_w_p, unsigned int seed){
+    hh::I_e = I_e;
+    hh::y = y;
+    hh::I_syn = I_syn;
+    hh::rate = rate;
+    hh::d_w_p = d_w_p;
+    init_noise(seed);
+    hh::tau_psc = tau_psc;
+    hh::exp_psc = exp(-hh::h/tau_psc);
+}
+
+
+using namespace hh;
+
+void simulate_cpp(){
+    for (unsigned int t = 0; t < Tsim; t++){
+        for (unsigned int i = 0; i < Nneur; i++){
+            integrate_neurons(t, i);
+        }
+    }
+}
+
+void init_noise(unsigned int seed){
+    for (unsigned int i = 0; i< Nneur; i++){
+        psn_seed[i] = 100000*(seed + i + 1);
+        psn_time[i] = 1 - (unsigned int) (1000.0*log(get_random(psn_seed + i))/(rate*h));
+    }
+}
