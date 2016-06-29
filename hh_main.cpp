@@ -29,7 +29,7 @@ namespace hh{
     double *V_m_last;
     double *Vrec;
     double *n_ch, *m_ch, *h_ch;
-    unsigned int *spike_time, *num_spike_neur;
+    unsigned int *spike_time, *num_spike_neur, *num_spike_syn;
 
     double *I_e;
     double *y, *I_syn;
@@ -39,9 +39,19 @@ namespace hh{
     double *d_w_p;
     unsigned int *psn_time, *psn_seed;
 
+    // spikes with definite times which are fed into neurons separately from Poisson
+    unsigned int *ext_spk_times;
+    unsigned int *ext_spk_num;
+
     double *Inoise;
     double tau_cor = 0.2;
     double *D;
+
+
+    double *weight;
+    unsigned int *delay;
+    unsigned int *pre_nidx;
+    unsigned int *post_nidx;
 
     double get_random(unsigned int *seed){
         // Park-Miller generator
@@ -83,6 +93,17 @@ namespace hh{
         return (0.07*(1.0 - h_ch)*exp(-(V + 65.0)*0.05) - h_ch/(1.0 + exp(-(V + 35.0)*0.1)))*h;
     }
 
+
+    void integrate_synapses(unsigned int t, unsigned int s){
+        // if we processed less spikes than presynaptic neuron generated
+        // we need to check whether the new spikes arrive at this moment of time
+        if (num_spike_syn[s] < num_spike_neur[pre_nidx[s]]){
+            if (spike_time[Nneur*num_spike_syn[s] + pre_nidx[s]] == t - delay[s]){
+                y[post_nidx[s]] += weight[s];
+                num_spike_syn[s]++;
+            }
+        }
+    }
 
     void integrate_neurons(unsigned int t, unsigned int n){
         double I_syn_last = I_syn[n];
@@ -159,13 +180,13 @@ namespace hh{
         Inoise[n] = Inoise_ + (ns1 + 2.0*(ns2 + ns3) + ns4)/6.0;
 
         // checking if there's spike on neuron
-    //    if (V_m[n] > V_peak && V_mem > V_m[n] && V_m_last[n] <= V_mem){
-    //        // second condition is necessary in the presence of noise
-    //        if (num_spike_neur[n] == 0 || t - spike_time[Nneur*(num_spike_neur[n] - 1) + n] > 5.0f/h){
-    //            spike_time[Nneur*num_spike_neur[n] + n] = t;
-    //            num_spike_neur[n]++;
-    //        }
-    //    }
+        if (V_m[n] > V_peak && V_mem > V_m[n] && V_m_last[n] <= V_mem){
+            // second condition is necessary in the presence of noise
+            if (num_spike_neur[n] == 0 || t - spike_time[Nneur*(num_spike_neur[n] - 1) + n] > 5.0f/h){
+                spike_time[Nneur*num_spike_neur[n] + n] = t;
+                num_spike_neur[n]++;
+            }
+        }
 
         if (t % recInt == 0){
             Vrec[Nneur*t/recInt + n] = V_m[n];
@@ -174,11 +195,7 @@ namespace hh{
     }
 }
 
-void set_delays(unsigned int *delays){
-
-}
-
-void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int recInt, double h){
+void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h){
     hh::Tsim = Tsim;
     hh::Nneur = Nneur;
     hh::recInt = recInt;
@@ -187,6 +204,19 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int recInt,
     hh::psn_time = new unsigned int[Nneur];
     hh::psn_seed = new unsigned int[Nneur];
     hh::Inoise = new double[Nneur];
+    hh::num_spike_neur = new unsigned int[Nneur];
+    hh::num_spike_syn = new unsigned int[Ncon];
+}
+
+void set_spike_times(unsigned int *spike_time){
+    hh::spike_time = spike_time;
+}
+
+void set_conns(double *weight, unsigned int *delay, unsigned int *pre, unsigned int *post){
+    hh::weight = weight;
+    hh::delay = delay;
+    hh::pre_nidx = pre;
+    hh::post_nidx = post;
 }
 
 void set_neur_vars(double *V_m, double *Vrec, double *n_ch, double *m_ch, double *h_ch){

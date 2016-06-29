@@ -9,9 +9,11 @@ import numpy as np
 import cython
 
 cdef extern from "hh_main.h": 
-    void set_delays(unsigned int *delays)
+    void set_spike_times(unsigned int *spike_time)
+
+    void set_conns(double *weight, unsigned int *delay, unsigned int *pre, unsigned int *post)
     
-    void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int recInt, double h)
+    void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h)
     
     void set_neur_vars(double *V_m, double *Vrec, double *n_ch, double *m_ch, double *h_ch)
     
@@ -19,8 +21,14 @@ cdef extern from "hh_main.h":
     
     void simulate_cpp()
 
-def setCalcParams(unsigned int Tsim, unsigned int Nneur, unsigned int recInt, double h):
-    set_calc_params(Tsim, Nneur, recInt, h)
+def setSpikeTimes(np.ndarray[np.uint32_t, ndim=2] spike_time):
+    set_spike_times(<unsigned int*> spike_time.data)
+    
+def setConns(np.ndarray[np.float64_t, ndim=1] weight, np.ndarray[np.uint32_t, ndim=1] delay, np.ndarray[np.uint32_t, ndim=1]  pre, np.ndarray[np.uint32_t, ndim=1] post):
+    set_conns(<double*> weight.data, <unsigned int*> delay.data, <unsigned int*> pre.data, <unsigned int*> post.data)
+
+def setCalcParams(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h):
+    set_calc_params(Tsim, Nneur, Ncon, recInt, h)
 
 def setNeurVars(np.ndarray[np.float64_t, ndim=1] V_m, np.ndarray[np.float64_t, ndim=2] Vrec, 
                 np.ndarray[np.float64_t, ndim=1] n_ch, 
