@@ -22,6 +22,7 @@ namespace hh{
 
     unsigned int Tsim;
     unsigned int Nneur;
+    unsigned int Ncon;
     unsigned int recInt;
     double h;
 
@@ -200,12 +201,13 @@ namespace hh{
 void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h){
     hh::Tsim = Tsim;
     hh::Nneur = Nneur;
+    hh::Ncon = Ncon;
     hh::recInt = recInt;
     hh::h = h;
     hh::V_m_last = new double[Nneur];
     hh::psn_time = new unsigned int[Nneur];
     hh::psn_seed = new unsigned int[Nneur];
-    hh::Inoise = new double[Nneur];
+    hh::Inoise = new double[Nneur]();
     hh::num_spike_neur = new unsigned int[Nneur]();
     hh::num_spike_syn = new unsigned int[Ncon]();
 }
@@ -248,7 +250,7 @@ void simulate_cpp(){
         for (unsigned int i = 0; i < Nneur; i++){
             integrate_neurons(t, i);
         }
-        for (unsigned int i = 0; i < Nneur; i++){
+        for (unsigned int i = 0; i < Ncon; i++){
             integrate_synapses(t, i);
         }
     }

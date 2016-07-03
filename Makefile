@@ -1,4 +1,4 @@
-CXXFLAGS =	-O0 -g -Wall -fmessage-length=0 -fPIC
+CXXFLAGS =	-O3 -Wall -fmessage-length=0 -fPIC
 
 OBJS =		py_hh.o hh_main.o
 
@@ -17,7 +17,7 @@ py_hh.o: py_hh.cpp
 	$(CXX) -c $(CXXFLAGS) `$(PYPATH)/python2-config --include` -I"/home/pavel/opt/python27/lib/python2.7/site-packages/numpy/core/include/" $< -o $@
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) -shared $(OBJS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) -shared $(OBJS) $(LIBS)
 
 all:	$(TARGET)
 
