@@ -9,7 +9,7 @@ import numpy as np
 import cython
 
 cdef extern from "hh_main.h": 
-    void set_spike_times(unsigned int *spike_time)
+    void set_spike_times(unsigned int *spike_time, unsigned int* num_spike_neur)
 
     void set_conns(double *weight, unsigned int *delay, unsigned int *pre, unsigned int *post)
     
@@ -21,8 +21,8 @@ cdef extern from "hh_main.h":
     
     void simulate_cpp()
 
-def setSpikeTimes(np.ndarray[np.uint32_t, ndim=2] spike_time):
-    set_spike_times(<unsigned int*> spike_time.data)
+def setSpikeTimes(np.ndarray[np.uint32_t, ndim=2] spike_time, np.ndarray[np.uint32_t, ndim=1] num_spike_neur):
+    set_spike_times(<unsigned int*> spike_time.data, <unsigned int*> num_spike_neur.data)
     
 def setConns(np.ndarray[np.float64_t, ndim=1] weight, np.ndarray[np.uint32_t, ndim=1] delay, np.ndarray[np.uint32_t, ndim=1]  pre, np.ndarray[np.uint32_t, ndim=1] post):
     set_conns(<double*> weight.data, <unsigned int*> delay.data, <unsigned int*> pre.data, <unsigned int*> post.data)

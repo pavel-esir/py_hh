@@ -114,6 +114,9 @@ namespace hh{
         // if where is poisson impulse on neuron
         while (psn_time[n] == t){
             y[n] += d_w_p[n];
+            // after taking logarithm from uniformly distributed from 0 to 1
+            // random number we get exponentially distributed random number
+            // for Poisson process time interals between impulses are exponentially distributed
             // sign of right part is negative hence here is "-="
             psn_time[n] -= (unsigned int) (1000.0*log(get_random(psn_seed + n))/(rate*h));
         }
@@ -208,12 +211,13 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, u
     hh::psn_time = new unsigned int[Nneur];
     hh::psn_seed = new unsigned int[Nneur];
     hh::Inoise = new double[Nneur]();
-    hh::num_spike_neur = new unsigned int[Nneur]();
+//     hh::num_spike_neur = new unsigned int[Nneur]();
     hh::num_spike_syn = new unsigned int[Ncon]();
 }
 
-void set_spike_times(unsigned int *spike_time){
+void set_spike_times(unsigned int *spike_time, unsigned int *num_spike_neur){
     hh::spike_time = spike_time;
+    hh::num_spike_neur = num_spike_neur;
 }
 
 void set_conns(double *weight, unsigned int *delay, unsigned int *pre, unsigned int *post){

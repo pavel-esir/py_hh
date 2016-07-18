@@ -17,7 +17,7 @@ void set_neur_vars(double *V_m, double *Vrec, double *n_ch, double *m_ch, double
 
 void set_currents(double *I_e, double *y, double *I_syn, double rate, double tau_psc, double *d_w_p, unsigned int seed);
 
-void set_spike_times(unsigned int *spike_time);
+void set_spike_times(unsigned int *spike_time, unsigned int *num_spike_neur);
 
 void set_conns(double *weight, unsigned int *delay, unsigned int *pre, unsigned int *post);
 
