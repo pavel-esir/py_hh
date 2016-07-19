@@ -65,8 +65,8 @@ namespace hh{
         return ((double) x)/m;
     }
 
-    double hh_Vm(double V, double n_ch, double m_ch, double h_ch, double I_syn, double I_e, double h){
-        return (I_e - g_K*(V - E_K)*n_ch*n_ch*n_ch*n_ch - g_Na*(V - E_Na)*m_ch*m_ch*m_ch*h_ch - g_L*(V - E_L) + I_syn)*h*Cm_;
+    double hh_Vm(double V, double n_ch, double m_ch, double h_ch, double I, double h){
+        return (-g_K*(V - E_K)*n_ch*n_ch*n_ch*n_ch - g_Na*(V - E_Na)*m_ch*m_ch*m_ch*h_ch - g_L*(V - E_L) + I)*h*Cm_;
     }
 
     double hh_n_ch(double V, double n_ch, double h){
@@ -136,7 +136,7 @@ namespace hh{
         m_channel = m_ch[n];
         h_channel = h_ch[n];
         Inoise_ = Inoise[n];
-        v1 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn_last + Inoise[n], I_e[n], h);
+        v1 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn_last + Inoise[n] + I_e[n], h);
         n1 = hh_n_ch(V_m[n], n_ch[n], h);
         m1 = hh_m_ch(V_m[n], m_ch[n], h);
         h1 = hh_h_ch(V_m[n], h_ch[n], h);
@@ -147,7 +147,7 @@ namespace hh{
         h_ch[n] = h_channel + h1/2.0;
         Inoise[n] = Inoise_ + ns1/2.0;
 
-        v2 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n]+ I_syn_last)/2.0f + Inoise[n] , I_e[n], h);
+        v2 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n]+ I_syn_last)/2.0 + Inoise[n] + I_e[n], h);
         n2 = hh_n_ch(V_m[n], n_ch[n], h);
         m2 = hh_m_ch(V_m[n], m_ch[n], h);
         h2 = hh_h_ch(V_m[n], h_ch[n], h);
@@ -159,7 +159,7 @@ namespace hh{
         Inoise[n] = Inoise_ + ns2/2.0;
 
 
-        v3 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n] + I_syn_last)/2.0f + Inoise[n], I_e[n], h);
+        v3 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n] + I_syn_last)/2.0 + Inoise[n] + I_e[n], h);
         n3 = hh_n_ch(V_m[n], n_ch[n], h);
         m3 = hh_m_ch(V_m[n], m_ch[n], h);
         h3 = hh_h_ch(V_m[n], h_ch[n], h);
@@ -171,13 +171,13 @@ namespace hh{
         Inoise[n] = Inoise_ + ns3;
 
 
-        v4 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn[n] + Inoise[n], I_e[n], h);
+        v4 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn[n] + Inoise[n] + I_e[n], h);
         n4 = hh_n_ch(V_m[n], n_ch[n], h);
         m4 = hh_m_ch(V_m[n], m_ch[n], h);
         h4 = hh_h_ch(V_m[n], h_ch[n], h);
         ns4 = (-Inoise[n]*h + dNoise)/tau_cor;
 
-        V_m[n] = V_mem + (v1 + 2.0*(v2 + v3) + v4)/6.0f;
+        V_m[n] = V_mem + (v1 + 2.0*(v2 + v3) + v4)/6.0;
         n_ch[n] = n_channel + (n1 + 2.0*(n2 + n3) + n4)/6.0;
         m_ch[n] = m_channel + (m1 + 2.0*(m2 + m3) + m4)/6.0;
         h_ch[n] = h_channel + (h1 + 2.0*(h2 + h3) + h4)/6.0;
@@ -186,7 +186,7 @@ namespace hh{
         // checking if there's spike on neuron
         if (V_m[n] > V_peak && V_mem > V_m[n] && V_m_last[n] <= V_mem){
             // second condition is necessary in the presence of noise
-            if (num_spike_neur[n] == 0 || t - spike_time[Nneur*(num_spike_neur[n] - 1) + n] > 5.0f/h){
+            if (num_spike_neur[n] == 0 || t - spike_time[Nneur*(num_spike_neur[n] - 1) + n] > 5.0/h){
                 spike_time[Nneur*num_spike_neur[n] + n] = t;
                 num_spike_neur[n]++;
             }
@@ -197,7 +197,6 @@ namespace hh{
             Vrec[Nneur*t/recInt + n] = V_m[n];
 //            Vrec[Nneur*t/recInt + n] = I_syn[n];
         }
-
     }
 }
 
