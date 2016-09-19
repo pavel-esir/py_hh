@@ -6,7 +6,7 @@
  */
 
 #include <cmath>
-#include "hh_main.h"
+#include "hh_main_cpu.h"
 #include <cstdio>
 
 #define Cm_    1.0 //  inverse of membrane capacity, 1/pF
@@ -118,7 +118,7 @@ namespace hh{
             // random number we get exponentially distributed random number
             // for Poisson process time interals between impulses are exponentially distributed
             // sign of right part is negative hence here is "-="
-            psn_time[n] -= (unsigned int) (1000.0*log(get_random(psn_seed + n))/(rate*h));
+            psn_time[n] += (unsigned int) (-1000.0*log(get_random(psn_seed + n))/(rate*h));
         }
         double V_mem, n_channel, m_channel, h_channel;
         double v1, v2, v3, v4;
@@ -206,7 +206,10 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, u
     hh::Ncon = Ncon;
     hh::recInt = recInt;
     hh::h = h;
-    hh::V_m_last = new double[Nneur];
+    hh::V_m_last = new double[Nneur]();
+    for (unsigned int i = 0; i < Nneur; i++){
+        hh::V_m_last[i] = 100.0;
+    }
     hh::psn_time = new unsigned int[Nneur];
     hh::psn_seed = new unsigned int[Nneur];
     hh::Inoise = new double[Nneur]();
@@ -262,6 +265,6 @@ void simulate_cpp(){
 void init_noise(unsigned int seed){
     for (unsigned int i = 0; i< Nneur; i++){
         psn_seed[i] = 100000*(seed + i + 1);
-        psn_time[i] = 1 - (unsigned int) (1000.0*log(get_random(psn_seed + i))/(rate*h));
+        psn_time[i] = 1 + (unsigned int) (-1000.0*log(get_random(psn_seed + i))/(rate*h));
     }
 }

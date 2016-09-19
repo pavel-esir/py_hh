@@ -6,3 +6,5 @@ py_hh.cpp
 !.cproject
 !.pydevproject
 !.gitignore
+py_hh_cpu.cpp
+*.odt
