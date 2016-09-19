@@ -10,21 +10,23 @@ import numpy as np
 import matplotlib.pylab as pl
 np.random.seed(0)
 
-SimTime = 100.0
+SimTime = 100000.0
 h = 0.02
 Tsim = int(SimTime/h)
-recInt = 2
+recInt = 500
 
 tau_psc = 0.2  # ms
 w_p = 2.0      # Poisson noise weith, pA
-w_n = 2.0      # connection weight, pA
+w_n = 1.3      # connection weight, pA
 
-rate = 200     # Poisson noise rate, Hz (shouldn't  be 0)
+rate = 182.5     # Poisson noise rate, Hz (shouldn't  be 0)
 Nneur = 100
-Ncon = int(Nneur*Nneur*0.2)
+Ncon = 2000
+#Ncon = int(Nneur*Nneur*0.2)
 pre = np.random.randint(0, Nneur, Ncon).astype('uint32')
 post = np.random.randint(0, Nneur, Ncon).astype('uint32')
-delay = np.random.lognormal(1.8, 1/6.0, Ncon).astype('uint32') # delay arrays in time frames
+delay = np.array([4.0/h]*Ncon).astype('uint32') # delay arrays in time frames
+#delay = np.random.lognormal(1.8, 1/6.0, Ncon).astype('uint32') # delay arrays in time frames
 
 #Nneur = 2
 #Ncon = 1
@@ -37,37 +39,49 @@ delay = np.random.lognormal(1.8, 1/6.0, Ncon).astype('uint32') # delay arrays in
 spike_times = np.zeros((int(SimTime/10) + 2, Nneur), dtype='uint32')
 num_spikes_neur = np.zeros(Nneur, dtype='uint32')
 
-weight = np.zeros(Ncon) + w_n*np.e/tau_psc
+weight = np.zeros(Ncon, dtype='float32') + w_n*np.e/tau_psc
 
 setCalcParams(Tsim, Nneur, Ncon, recInt, h)
 
-Vm = np.zeros(Nneur) + 32.906693
-Vrec = np.zeros((int(Tsim/recInt), Nneur))
-ns = np.zeros(Nneur) + 0.574676
-ms = np.zeros(Nneur) + 0.913177
-hs = np.zeros(Nneur) + 0.223994
+Vm = np.zeros(Nneur, dtype='float32') + 32.906693
+Vrec = np.zeros((int(Tsim/recInt), Nneur), dtype='float32')
+ns = np.zeros(Nneur, dtype='float32') + 0.574676
+ms = np.zeros(Nneur, dtype='float32') + 0.913177
+hs = np.zeros(Nneur, dtype='float32') + 0.223994
 
 
 #Ie = np.zeros(Nneur) + 5.27
 
-Ie = np.zeros(Nneur)
-Ie[0] = 5.27
+Ie = np.zeros(Nneur, dtype='float32')
+Ie[:] = 5.27
 
-y = np.zeros(Nneur)
-Isyn = np.zeros(Nneur)
-d_w_p = np.zeros(Nneur) + np.e*w_p/tau_psc
+y = np.zeros(Nneur, dtype='float32')
+Isyn = np.zeros(Nneur, dtype='float32')
+d_w_p = np.zeros(Nneur, dtype='float32') + w_p*np.e/tau_psc
 
 setNeurVars(Vm, Vrec, ns, ms, hs)
 setCurrents(Ie, y, Isyn, rate, tau_psc, d_w_p, 0)
 
-setSpikeTimes(spike_times, num_spikes_neur)
+setSpikeTimes(spike_times, num_spikes_neur, (int(SimTime/10) + 2)*Nneur)
 
 setConns(weight, delay,  pre, post)
-
+#%%
 simulate()
-
+#%%
+#pl.figure()
+#pl.plot(np.linspace(0, SimTime, int(Tsim/recInt)), Vrec[:, ::1])
+#pl.xlabel('time, ms')
+#pl.ylabel('Membrane potential, mV')
+#pl.show()
+#%%
 pl.figure()
-pl.plot(np.linspace(0, SimTime, int(Tsim/recInt)), Vrec[:, :])
+# combine all spike
+spikes = spike_times[:num_spikes_neur[0], 0]
+for i, nsp in zip(xrange(1, Nneur), num_spikes_neur[1:]):
+    spikes = np.concatenate((spikes, spike_times[:nsp, i]))
+
+pl.hist(spikes*h, bins=int(SimTime/20), histtype='step')
 pl.xlabel('time, ms')
-pl.ylabel('Membrane potential, mV')
+#pl.ylabel('Membrane potential, mV')
 pl.show()
+#
