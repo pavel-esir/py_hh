@@ -27,5 +27,12 @@ struct RecordVars{
     unsigned int interval;
 };
 
+struct IncSpikes{
+    unsigned int MAXSZ; // [maximum(over all neurons) number of incoming spikes
+    unsigned int *times; // size of times is  (MaxNumIncom, Nneur)
+    float *weights;
+    unsigned int *nums;
+    unsigned int *numProcessed;
+};
 
 #endif /* COMMON_DECLRATIONS_H_ */

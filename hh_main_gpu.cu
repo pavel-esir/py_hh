@@ -84,7 +84,7 @@ void integrate_synapses(unsigned int t, unsigned int Ncon, unsigned int Nneur, u
 __global__
 void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time,
                        float exp_psc, float tau_cor, NeurVars nv, RecordVars rv,
-                       unsigned int *num_spike_neur, unsigned int *spike_time){
+                       unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
     unsigned int n = blockIdx.x*blockDim.x + threadIdx.x;
     if (n < Nneur){
         float I_syn_last = nv.Isyn[n];
@@ -99,6 +99,15 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
             // for Poisson process time interals between impulses are exponentially distributed
             // sign of right part is negative hence here is "-="
             psn_time[n] += (unsigned int) (-1000.0f*log(get_random(psn_seed + n))/(rate*h));
+        }
+
+        while (incSpikes.nums[n] != 0 && incSpikes.times[incSpikes.MAXSZ*incSpikes.numProcessed[n] + n] == t){
+            nv.y[n] += incSpikes.weights[incSpikes.MAXSZ*incSpikes.numProcessed[n] + n];
+            if (incSpikes.numProcessed[n] < incSpikes.nums[n]){
+                incSpikes.numProcessed[n] += 1;
+            } else {
+                break;
+            }
         }
         float V_mem, n_channel, m_channel, h_channel;
         float v1, v2, v3, v4;
@@ -206,8 +215,9 @@ void fillFloatArr_gpu(unsigned int size, float *arr, float val){
 }
 
 void integrate_neurons_gpu(unsigned int t, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time,
-        float exp_psc, float tau_cor, NeurVars nv, RecordVars rv, unsigned int *num_spike_neur, unsigned int *spike_time){
-    integrate_neurons<<<(Nneur + NBlockSz - 1)/NBlockSz, NBlockSz>>>(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, tau_cor, nv, rv, num_spike_neur, spike_time);
+        float exp_psc, float tau_cor, NeurVars nv, RecordVars rv, unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
+    integrate_neurons<<<(Nneur + NBlockSz - 1)/NBlockSz, NBlockSz>>>(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, tau_cor, nv, rv,
+            num_spike_neur, spike_time, incSpikes);
 }
 
 void integrate_synapses_gpu(unsigned int t, unsigned int Ncon, unsigned int Nneur, unsigned int *pre_nidx, unsigned int *post_nidx, float *weight,

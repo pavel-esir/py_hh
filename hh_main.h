@@ -14,6 +14,8 @@ void set_neur_vars(float *V_m, float *Vrec, float *n_ch, float *m_ch, float *h_c
 
 void set_currents(float *I_e, float *y, float *I_syn, float rate, float tau_psc, float *d_w_p, unsigned int seed);
 
+void set_incom_spikes(unsigned int *times, unsigned int *nums, float *weights, unsigned int MaxNumIncom);
+
 void set_spike_times(unsigned int *spike_time, unsigned int *num_spike_neur, unsigned int sz);
 
 void set_conns(float *weight, unsigned int *delay, unsigned int *pre, unsigned int *post);

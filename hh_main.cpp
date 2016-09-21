@@ -40,6 +40,8 @@ namespace hh{
     unsigned int *spike_time_out, *num_spike_neur_out;
     unsigned int numSpikeSz;
 
+    IncSpikes incSpikes;
+
     float *I_e;
     float *y, *I_syn;
     float rate;
@@ -141,6 +143,20 @@ void set_currents(float *I_e, float *y, float *I_syn, float rate, float tau_psc,
     init_noise_gpu(seed, Nneur, h, rate, psn_seed, psn_time);
 }
 
+void set_incom_spikes(unsigned int *times, unsigned int *nums, float* weights, unsigned int MaxNumIncom){
+    CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.times, MaxNumIncom*hh::Nneur*sizeof(unsigned int)));
+    CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.weights, MaxNumIncom*hh::Nneur*sizeof(float)));
+    CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.nums, hh::Nneur*sizeof(unsigned int)));
+    CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.numProcessed, hh::Nneur*sizeof(unsigned int)));
+    hh::incSpikes.MAXSZ = MaxNumIncom;
+    printf("%i \n", MaxNumIncom);
+
+    CUDA_CHECK_RETURN(cudaMemcpy(hh::incSpikes.times, times, MaxNumIncom*hh::Nneur*sizeof(unsigned int), cudaMemcpyHostToDevice));
+    cudaMemcpy(hh::incSpikes.weights, weights, MaxNumIncom*hh::Nneur*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(hh::incSpikes.nums, nums, hh::Nneur*sizeof(unsigned int), cudaMemcpyHostToDevice);
+    cudaMemset(hh::incSpikes.numProcessed, 0, hh::Nneur*sizeof(unsigned int));
+}
+
 using namespace hh;
 
 void simulate_cpp(){
@@ -163,7 +179,7 @@ void simulate_cpp(){
          printf("%.3f\n", t*h);
         }
         
-        integrate_neurons_gpu(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, tau_cor, nv, rv, num_spike_neur, spike_time);
+        integrate_neurons_gpu(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, tau_cor, nv, rv, num_spike_neur, spike_time, incSpikes);
         CUDA_CHECK_RETURN(cudaGetLastError());
 
         integrate_synapses_gpu(t, Ncon, Nneur, pre_nidx, post_nidx, weight, y, delay, num_spike_syn, num_spike_neur, spike_time);
@@ -176,4 +192,3 @@ void simulate_cpp(){
     cudaMemcpy(num_spike_neur_out, num_spike_neur, sizeof(unsigned int)*Nneur, cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
 }
-

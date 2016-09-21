@@ -19,6 +19,8 @@ cdef extern from "hh_main.h":
     
     void set_currents(float *I_e, float *y, float *I_syn, float rate, float tau_psc, float *d_w_p, unsigned int seed)
     
+    void set_incom_spikes(unsigned int *times, unsigned int *nums, float *weights, unsigned int MaxNumIncom)
+    
     void simulate_cpp()
 
 def setSpikeTimes(np.ndarray[np.uint32_t, ndim=2] spike_time, np.ndarray[np.uint32_t, ndim=1] num_spike_neur, unsigned int sz):
@@ -41,6 +43,9 @@ def setCurrents(np.ndarray[np.float32_t, ndim=1] I_e, np.ndarray[np.float32_t, n
                 np.ndarray[np.float32_t, ndim=1] I_syn, 
                 float rate, float tau_psc, np.ndarray[np.float32_t, ndim=1] d_w_p, unsigned int seed):
     set_currents(<float*> I_e.data, <float*> y.data, <float*> I_syn.data, rate, tau_psc, <float*> d_w_p.data, seed)
+
+def setIncomSpikes(np.ndarray[np.uint32_t, ndim=2] times, np.ndarray[np.uint32_t, ndim=1] nums, np.ndarray[np.float32_t, ndim=2] weights, unsigned int maxnum):
+    set_incom_spikes(<unsigned int*> times.data, <unsigned int*> nums.data, <float*> weights.data, maxnum)
 
 def simulate():
     simulate_cpp()
