@@ -46,7 +46,7 @@ weight = np.zeros(Ncon, dtype='float32') + w_n*np.e/tau_psc
 setCalcParams(Tsim, Nneur, Ncon, recInt, h)
 
 Vm = np.zeros(Nneur, dtype='float32') + 32.906693
-Vrec = np.zeros((int(Tsim/recInt), Nneur), dtype='float32')
+Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype='float32')
 ns = np.zeros(Nneur, dtype='float32') + 0.574676
 ms = np.zeros(Nneur, dtype='float32') + 0.913177
 hs = np.zeros(Nneur, dtype='float32') + 0.223994
@@ -87,10 +87,11 @@ setConns(weight, delay,  pre, post)
 simulate()
 #%%
 #pl.figure()
-#pl.plot(np.linspace(0, SimTime, int(Tsim/recInt)), Vrec[:, 540:541:1])
+#pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, ::2])
 #pl.xlabel('time, ms')
 #pl.ylabel('Membrane potential, mV')
 #pl.show()
+#pl.xlim((0, SimTime))
 #%%
 #pl.figure()
 ## combine all spike

@@ -110,13 +110,13 @@ void set_conns(float *weight, unsigned int *delay, unsigned int *pre, unsigned i
 
 void set_neur_vars(float *V_m, float *Vrec, float *n_ch, float *m_ch, float *h_ch){
     CUDA_CHECK_RETURN(cudaMalloc((void**) &(hh::V_m), sizeof(float)*hh::Nneur));
-    cudaMalloc((void**) &hh::Vrec, sizeof(float)*hh::Nneur*hh::Tsim / hh::recInt);
+    cudaMalloc((void**) &hh::Vrec, sizeof(float)*hh::Nneur*(hh::Tsim + hh::recInt - 1)/ hh::recInt);
     cudaMalloc((void**) &hh::n_ch, sizeof(float)*hh::Nneur);
     cudaMalloc((void**) &hh::m_ch, sizeof(float)*hh::Nneur);
     cudaMalloc((void**) &hh::h_ch, sizeof(float)*hh::Nneur);
 
     CUDA_CHECK_RETURN(cudaMemcpy(hh::V_m, V_m, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice));
-    cudaMemcpy(hh::Vrec, Vrec, sizeof(float)*hh::Nneur*hh::Tsim / hh::recInt, cudaMemcpyHostToDevice);
+    cudaMemcpy(hh::Vrec, Vrec, sizeof(float)*hh::Nneur*(hh::Tsim + hh::recInt - 1) / hh::recInt, cudaMemcpyHostToDevice);
     cudaMemcpy(hh::n_ch, n_ch, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
     cudaMemcpy(hh::m_ch, m_ch, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
     cudaMemcpy(hh::h_ch, h_ch, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
@@ -187,7 +187,7 @@ void simulate_cpp(){
 
     }
 
-    cudaMemcpy(Vrec_out, Vrec, sizeof(float)*Nneur*Tsim / recInt, cudaMemcpyDeviceToHost);
+    cudaMemcpy(Vrec_out, Vrec, sizeof(float)*Nneur*(Tsim + recInt - 1) / recInt, cudaMemcpyDeviceToHost);
     cudaMemcpy(spike_time_out, spike_time, numSpikeSz*sizeof(unsigned int), cudaMemcpyDeviceToHost);
     cudaMemcpy(num_spike_neur_out, num_spike_neur, sizeof(unsigned int)*Nneur, cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
