@@ -149,7 +149,6 @@ void set_incom_spikes(unsigned int *times, unsigned int *nums, float* weights, u
     CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.nums, hh::Nneur*sizeof(unsigned int)));
     CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.numProcessed, hh::Nneur*sizeof(unsigned int)));
     hh::incSpikes.MAXSZ = MaxNumIncom;
-    printf("%i \n", MaxNumIncom);
 
     CUDA_CHECK_RETURN(cudaMemcpy(hh::incSpikes.times, times, MaxNumIncom*hh::Nneur*sizeof(unsigned int), cudaMemcpyHostToDevice));
     cudaMemcpy(hh::incSpikes.weights, weights, MaxNumIncom*hh::Nneur*sizeof(float), cudaMemcpyHostToDevice);
@@ -176,7 +175,7 @@ void simulate_cpp(){
 
     for (unsigned int t = 0; t < Tsim; t++){
         if (t % 50000 == 0){
-         printf("%.3f\n", t*h);
+            printf("%.3f\n", t*h);
         }
         
         integrate_neurons_gpu(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, tau_cor, nv, rv, num_spike_neur, spike_time, incSpikes);

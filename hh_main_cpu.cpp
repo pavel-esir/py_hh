@@ -54,6 +54,12 @@ namespace hh{
     unsigned int *pre_nidx;
     unsigned int *post_nidx;
 
+    unsigned int MAXSZ; // [maximum(over all neurons) number of incoming spikes
+    unsigned int *incSpTimes; // size of times is  (MaxNumIncom, Nneur)
+    double *incSpWeights;
+    unsigned int *numIncomSpikes;
+    unsigned int *numProcessed;
+
     double get_random(unsigned int *seed){
         // Park-Miller generator
         // return random number homogeneously distributed in interval [0:1)
@@ -106,6 +112,15 @@ namespace hh{
         }
     }
 
+//    while (incSpikes.nums[n] != 0 && incSpikes.times[incSpikes.MAXSZ*incSpikes.numProcessed[n] + n] == t){
+//        nv.y[n] += incSpikes.weights[incSpikes.MAXSZ*incSpikes.numProcessed[n] + n];
+//        if (incSpikes.numProcessed[n] < incSpikes.nums[n]){
+//            incSpikes.numProcessed[n] += 1;
+//        } else {
+//            break;
+//        }
+//    }
+
     void integrate_neurons(unsigned int t, unsigned int n){
         double I_syn_last = I_syn[n];
         I_syn[n]  = (y[n]*h + I_syn[n])*exp_psc;
@@ -120,6 +135,16 @@ namespace hh{
             // sign of right part is negative hence here is "-="
             psn_time[n] += (unsigned int) (-1000.0*log(get_random(psn_seed + n))/(rate*h));
         }
+
+        while (numIncomSpikes[n] != 0 && incSpTimes[MAXSZ*numProcessed[n] + n] == t){
+            y[n] += incSpWeights[MAXSZ*numProcessed[n] + n];
+            if (numProcessed[n] < numIncomSpikes[n]){
+                numProcessed[n] += 1;
+            } else {
+                break;
+            }
+        }
+
         double V_mem, n_channel, m_channel, h_channel;
         double v1, v2, v3, v4;
         double n1, n2, n3, n4;
@@ -217,7 +242,15 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, u
     hh::num_spike_syn = new unsigned int[Ncon]();
 }
 
-void set_spike_times(unsigned int *spike_time, unsigned int *num_spike_neur){
+void set_incom_spikes(unsigned int *times, unsigned int *nums, double *weights, unsigned int MaxNumIncom){
+    hh::MAXSZ = MaxNumIncom;
+    hh::incSpTimes = times;
+    hh::incSpWeights = weights;
+    hh::numIncomSpikes = nums;
+    hh::numProcessed = new unsigned int[hh::Nneur]();
+}
+
+void set_spike_times(unsigned int *spike_time, unsigned int *num_spike_neur, unsigned int sz){
     hh::spike_time = spike_time;
     hh::num_spike_neur = num_spike_neur;
 }

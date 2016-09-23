@@ -4,27 +4,28 @@ Created on 29 июня 2016 г.
 
 @author: Pavel Esir
 '''
-
-from py_hh import *
+fltSize = 'float64'
+from py_hh_cpu import *
 import numpy as np
 import matplotlib.pylab as pl
 np.random.seed(0)
 
 Ntrans = 2 # length of transient process in periods, integer
-T = 20.27
+T = 20.275
 SimTime = (Ntrans+0.5)*T
-h = 0.01
+h = 0.02
 Tsim = int(SimTime/h)
-recInt = 10
+recInt = 20
 
 tau_psc = 0.2  # ms
 w_p = 0.0      # Poisson noise weith, pA
 w_n = 0.0      # connection weight, pA
 
 rate = 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
+#Nneur = 100
+#Ncon = int(Nneur*Nneur*0.2)
 Nneur = int(T/h)
 Ncon = 1
-#Ncon = int(Nneur*Nneur*0.2)
 pre = np.random.randint(0, Nneur, Ncon).astype('uint32')
 post = np.random.randint(0, Nneur, Ncon).astype('uint32')
 delay = np.array([4.0/h]*Ncon).astype('uint32') # delay arrays in time frames
@@ -41,21 +42,21 @@ delay = np.array([4.0/h]*Ncon).astype('uint32') # delay arrays in time frames
 spike_times = np.zeros((int(SimTime/10) + 2, Nneur), dtype='uint32')
 num_spikes_neur = np.zeros(Nneur, dtype='uint32')
 
-weight = np.zeros(Ncon, dtype='float32') + w_n*np.e/tau_psc
+weight = np.zeros(Ncon, dtype=fltSize) + w_n*np.e/tau_psc
 
 setCalcParams(Tsim, Nneur, Ncon, recInt, h)
 
-Vm = np.zeros(Nneur, dtype='float32') + 32.906693
-Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype='float32')
-ns = np.zeros(Nneur, dtype='float32') + 0.574676
-ms = np.zeros(Nneur, dtype='float32') + 0.913177
-hs = np.zeros(Nneur, dtype='float32') + 0.223994
+Vm = np.zeros(Nneur, dtype=fltSize) + 32.906693
+Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype=fltSize)
+ns = np.zeros(Nneur, dtype=fltSize) + 0.574676
+ms = np.zeros(Nneur, dtype=fltSize) + 0.913177
+hs = np.zeros(Nneur, dtype=fltSize) + 0.223994
 
 NnumSp = 1
 wInc = 1.3
 nums = np.zeros(Nneur, dtype='uint32')
 incTimes = np.zeros((NnumSp, Nneur), dtype='uint32')
-incSpWeights = np.zeros((NnumSp, Nneur), dtype='float32') + wInc*np.e/tau_psc
+incSpWeights = np.zeros((NnumSp, Nneur), dtype=fltSize) + wInc*np.e/tau_psc
 dts = np.arange(0, Nneur, dtype='uint32')
 for i in xrange(NnumSp):
     incTimes[i, :] = (i + 1)*dts
@@ -70,12 +71,12 @@ setIncomSpikes(incTimes, nums, incSpWeights, NnumSp)
 #%%
 #Ie = np.zeros(Nneur) + 5.27
 
-Ie = np.zeros(Nneur, dtype='float32')
+Ie = np.zeros(Nneur, dtype=fltSize)
 Ie[:] = 5.27
 
-y = np.zeros(Nneur, dtype='float32')
-Isyn = np.zeros(Nneur, dtype='float32')
-d_w_p = np.zeros(Nneur, dtype='float32') + w_p*np.e/tau_psc
+y = np.zeros(Nneur, dtype=fltSize)
+Isyn = np.zeros(Nneur, dtype=fltSize)
+d_w_p = np.zeros(Nneur, dtype=fltSize) + w_p*np.e/tau_psc
 
 setNeurVars(Vm, Vrec, ns, ms, hs)
 setCurrents(Ie, y, Isyn, rate, tau_psc, d_w_p, 0)
@@ -111,12 +112,13 @@ lastSpikeTime = np.zeros(Nneur)
 for i, n in enumerate(num_spikes_neur):
     if n != 0:
         lastSpikeTime[i] = spike_times[n - 1, i]
-#        if (lastSpikeTime[i] - 6*T ) > dts:
-#            lastSpikeTime[i] = np.nan
+        if n < Ntrans:
+            lastSpikeTime[i] = np.nan
     else:
         lastSpikeTime[i] = np.nan
 
-#pl.plot(dts*h, np.ma.array((Ntrans*T + h*dts) - h*lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime)), '-o')
-pl.plot(dts*h, np.ma.array(h*lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime)), '-o')
-
+pl.plot(dts*h, np.ma.array((Ntrans*T + h*dts) - h*lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime)), '-')
+pl.plot(arange(0, T, 0.01), arange(0, T, 0.01))
+pl.ylim((0, T))
+pl.xlim((0, T))
 pl.show()
