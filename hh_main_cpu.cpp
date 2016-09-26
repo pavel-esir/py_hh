@@ -136,13 +136,9 @@ namespace hh{
             psn_time[n] += (unsigned int) (-1000.0*log(get_random(psn_seed + n))/(rate*h));
         }
 
-        while (numIncomSpikes[n] != 0 && incSpTimes[MAXSZ*numProcessed[n] + n] == t){
-            y[n] += incSpWeights[MAXSZ*numProcessed[n] + n];
-            if (numProcessed[n] < numIncomSpikes[n]){
-                numProcessed[n] += 1;
-            } else {
-                break;
-            }
+        while (numProcessed[n] < numIncomSpikes[n] && incSpTimes[Nneur*numProcessed[n] + n] == t){
+            y[n] += incSpWeights[Nneur*numProcessed[n] + n];
+            numProcessed[n] += 1;
         }
 
         double V_mem, n_channel, m_channel, h_channel;

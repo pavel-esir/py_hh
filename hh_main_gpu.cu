@@ -101,13 +101,9 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
             psn_time[n] += (unsigned int) (-1000.0f*log(get_random(psn_seed + n))/(rate*h));
         }
 
-        while (incSpikes.nums[n] != 0 && incSpikes.times[incSpikes.MAXSZ*incSpikes.numProcessed[n] + n] == t){
-            nv.y[n] += incSpikes.weights[incSpikes.MAXSZ*incSpikes.numProcessed[n] + n];
-            if (incSpikes.numProcessed[n] < incSpikes.nums[n]){
-                incSpikes.numProcessed[n] += 1;
-            } else {
-                break;
-            }
+        while (incSpikes.numProcessed[n] < incSpikes.nums[n] && incSpikes.times[Nneur*incSpikes.numProcessed[n] + n] == t){
+            nv.y[n] += incSpikes.weights[Nneur*incSpikes.numProcessed[n] + n];
+            incSpikes.numProcessed[n] += 1;
         }
         float V_mem, n_channel, m_channel, h_channel;
         float v1, v2, v3, v4;
