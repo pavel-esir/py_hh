@@ -83,13 +83,12 @@ void integrate_synapses(unsigned int t, unsigned int Ncon, unsigned int Nneur, u
 
 __global__
 void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time,
-                       float exp_psc, float tau_cor, NeurVars nv, RecordVars rv,
+                       float exp_psc, float exp_psc_half, float tau_cor, NeurVars nv, RecordVars rv,
                        unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
     unsigned int n = blockIdx.x*blockDim.x + threadIdx.x;
     if (n < Nneur){
-        float I_syn_last = nv.Isyn[n];
-        nv.Isyn[n]  = (nv.y[n]*h + nv.Isyn[n])*exp_psc;
-        nv.y[n] *= exp_psc;
+        float I_syn_half = (nv.y[n]*h*0.5 + nv.Isyn[n])*exp_psc_half;
+
 
         // if where is poisson impulse on neuron
         while (psn_time[n] == t){
@@ -121,7 +120,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
         m_channel = nv.m[n];
         h_channel = nv.h[n];
         Inoise_ = nv.Inoise[n];
-        v1 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_last + nv.Inoise[n] + nv.Ie[n], h);
+        v1 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], nv.Isyn[n] + nv.Inoise[n] + nv.Ie[n], h);
         n1 = hh_n_ch(nv.V[n], nv.n[n], h);
         m1 = hh_m_ch(nv.V[n], nv.m[n], h);
         h1 = hh_h_ch(nv.V[n], nv.h[n], h);
@@ -132,7 +131,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
         nv.h[n] = h_channel + h1/2.0;
         nv.Inoise[n] = Inoise_ + ns1/2.0;
 
-        v2 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], (nv.Isyn[n]+ I_syn_last)/2.0 + nv.Inoise[n] + nv.Ie[n], h);
+        v2 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
         n2 = hh_n_ch(nv.V[n], nv.n[n], h);
         m2 = hh_m_ch(nv.V[n], nv.m[n], h);
         h2 = hh_h_ch(nv.V[n], nv.h[n], h);
@@ -144,7 +143,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
         nv.Inoise[n] = Inoise_ + ns2/2.0;
 
 
-        v3 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], (nv.Isyn[n] + I_syn_last)/2.0 + nv.Inoise[n] + nv.Ie[n], h);
+        v3 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
         n3 = hh_n_ch(nv.V[n], nv.n[n], h);
         m3 = hh_m_ch(nv.V[n], nv.m[n], h);
         h3 = hh_h_ch(nv.V[n], nv.h[n], h);
@@ -155,6 +154,8 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
         nv.h[n] = h_channel + h3;
         nv.Inoise[n] = Inoise_ + ns3;
 
+        nv.Isyn[n]  = (nv.y[n]*h + nv.Isyn[n])*exp_psc;
+        nv.y[n] *= exp_psc;
 
         v4 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], nv.Isyn[n] + nv.Inoise[n] + nv.Ie[n], h);
         n4 = hh_n_ch(nv.V[n], nv.n[n], h);
@@ -211,8 +212,8 @@ void fillFloatArr_gpu(unsigned int size, float *arr, float val){
 }
 
 void integrate_neurons_gpu(unsigned int t, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time,
-        float exp_psc, float tau_cor, NeurVars nv, RecordVars rv, unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
-    integrate_neurons<<<(Nneur + NBlockSz - 1)/NBlockSz, NBlockSz>>>(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, tau_cor, nv, rv,
+        float exp_psc, float exp_psc_half, float tau_cor, NeurVars nv, RecordVars rv, unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
+    integrate_neurons<<<(Nneur + NBlockSz - 1)/NBlockSz, NBlockSz>>>(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, exp_psc_half, tau_cor, nv, rv,
             num_spike_neur, spike_time, incSpikes);
 }
 

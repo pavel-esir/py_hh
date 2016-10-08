@@ -37,6 +37,7 @@ namespace hh{
     double rate;
     double tau_psc;
     double exp_psc;
+    double exp_psc_half;
     double *d_w_p;
     unsigned int *psn_time, *psn_seed;
 
@@ -122,9 +123,7 @@ namespace hh{
 //    }
 
     void integrate_neurons(unsigned int t, unsigned int n){
-        double I_syn_last = I_syn[n];
-        I_syn[n]  = (y[n]*h + I_syn[n])*exp_psc;
-        y[n] *= exp_psc;
+        double I_syn_half = (y[n]*h*0.5 + I_syn[n])*exp_psc_half;
 
         // if where is poisson impulse on neuron
         while (psn_time[n] == t){
@@ -157,7 +156,7 @@ namespace hh{
         m_channel = m_ch[n];
         h_channel = h_ch[n];
         Inoise_ = Inoise[n];
-        v1 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn_last + Inoise[n] + I_e[n], h);
+        v1 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn[n] + Inoise[n] + I_e[n], h);
         n1 = hh_n_ch(V_m[n], n_ch[n], h);
         m1 = hh_m_ch(V_m[n], m_ch[n], h);
         h1 = hh_h_ch(V_m[n], h_ch[n], h);
@@ -168,7 +167,7 @@ namespace hh{
         h_ch[n] = h_channel + h1/2.0;
         Inoise[n] = Inoise_ + ns1/2.0;
 
-        v2 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n]+ I_syn_last)/2.0 + Inoise[n] + I_e[n], h);
+        v2 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn_half + Inoise[n] + I_e[n], h);
         n2 = hh_n_ch(V_m[n], n_ch[n], h);
         m2 = hh_m_ch(V_m[n], m_ch[n], h);
         h2 = hh_h_ch(V_m[n], h_ch[n], h);
@@ -180,7 +179,7 @@ namespace hh{
         Inoise[n] = Inoise_ + ns2/2.0;
 
 
-        v3 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], (I_syn[n] + I_syn_last)/2.0 + Inoise[n] + I_e[n], h);
+        v3 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn_half + Inoise[n] + I_e[n], h);
         n3 = hh_n_ch(V_m[n], n_ch[n], h);
         m3 = hh_m_ch(V_m[n], m_ch[n], h);
         h3 = hh_h_ch(V_m[n], h_ch[n], h);
@@ -191,6 +190,9 @@ namespace hh{
         h_ch[n] = h_channel + h3;
         Inoise[n] = Inoise_ + ns3;
 
+
+        I_syn[n]  = (y[n]*h + I_syn[n])*exp_psc;
+        y[n] *= exp_psc;
 
         v4 = hh_Vm(V_m[n], n_ch[n], m_ch[n], h_ch[n], I_syn[n] + Inoise[n] + I_e[n], h);
         n4 = hh_n_ch(V_m[n], n_ch[n], h);
@@ -275,6 +277,7 @@ void set_currents(double *I_e, double *y, double *I_syn, double rate, double tau
     init_noise(seed);
     hh::tau_psc = tau_psc;
     hh::exp_psc = exp(-hh::h/tau_psc);
+    hh::exp_psc_half = exp(-hh::h*0.5/tau_psc);
 }
 
 

@@ -46,7 +46,6 @@ namespace hh{
     float *y, *I_syn;
     float rate;
     float tau_psc;
-    float exp_psc;
     float *d_w_p;
     unsigned int *psn_time, *psn_seed;
 
@@ -137,7 +136,6 @@ void set_currents(float *I_e, float *y, float *I_syn, float rate, float tau_psc,
     hh::rate = rate;
 
     hh::tau_psc = tau_psc;
-    hh::exp_psc = exp(-hh::h/tau_psc);
 
     using namespace hh;
     init_noise_gpu(seed, Nneur, h, rate, psn_seed, psn_time);
@@ -172,13 +170,15 @@ void simulate_cpp(){
 
     rv.V = Vrec;
     rv.interval = recInt;
-
+    float exp_psc =  exp(-h/tau_psc);
+    float exp_psc_half =  exp(-h*0.5/tau_psc);
+    
     for (unsigned int t = 0; t < Tsim; t++){
         if (t % 50000 == 0){
             printf("%.3f\n", t*h);
         }
         
-        integrate_neurons_gpu(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, tau_cor, nv, rv, num_spike_neur, spike_time, incSpikes);
+        integrate_neurons_gpu(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, exp_psc_half, tau_cor, nv, rv, num_spike_neur, spike_time, incSpikes);
         CUDA_CHECK_RETURN(cudaGetLastError());
 
         integrate_synapses_gpu(t, Ncon, Nneur, pre_nidx, post_nidx, weight, y, delay, num_spike_syn, num_spike_neur, spike_time);
