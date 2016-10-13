@@ -4,32 +4,49 @@ Created on 29 июня 2016 г.
 
 @author: Pavel Esir
 '''
-fltSize = 'float64'
-from py_hh_cpu import *
+fltSize = 'float32'
+from py_hh import *
 import numpy as np
 import matplotlib.pylab as pl
 np.random.seed(0)
 
-Ntrans = 2 # length of transient process in periods, integer
+Ntrans = 3 # length of transient process in periods, integer
 T = 20.275
-SimTime = (Ntrans+0.5)*T
+#SimTime = (Ntrans+0.5)*T
+SimTime = 2000.
 h = 0.02
 Tsim = int(SimTime/h)
-recInt = 20
+recInt = 200000
 
 tau_psc = 0.2  # ms
-w_p = 0.0      # Poisson noise weith, pA
-w_n = 0.0      # connection weight, pA
+w_p = 1.98      # Poisson noise weith, pA
+w_n = 1.3      # connection weight, pA
 
-rate = 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
-#Nneur = 100
-#Ncon = int(Nneur*Nneur*0.2)
-Nneur = int(T/h)
-Ncon = 1
-pre = np.random.randint(0, Nneur, Ncon).astype('uint32')
-post = np.random.randint(0, Nneur, Ncon).astype('uint32')
-delay = np.array([4.0/h]*Ncon).astype('uint32') # delay arrays in time frames
+rate = 185.0     # Poisson noise rate, Hz (shouldn't  be 0)
+Nneur = 100
+Ncon = int(Nneur*Nneur*0.2)
+#Nneur = int(T/h)
+#Ncon = 1
+#pre = np.random.randint(0, Nneur, Ncon).astype('uint32')
+#post = np.random.randint(0, Nneur, Ncon).astype('uint32')
+#delay = np.array([4.0/h]*Ncon).astype('uint32') # delay arrays in time frames
 #delay = np.random.lognormal(1.8, 1/6.0, Ncon).astype('uint32') # delay arrays in time frames
+
+import csv
+f = open('nn_params_100.csv', 'r')
+rdr = csv.reader(f, delimiter=' ')
+pre = []
+post = []
+delay = []
+for l in rdr:
+    pre.append(l[0])
+    post.append(l[1])
+    delay.append(l[2])
+
+pre = np.array(pre).astype('uint32')
+post = np.array(post).astype('uint32')
+delay = (np.array(delay, dtype='float')/h).astype('uint32')
+Ncon = len(pre)
 
 #Nneur = 2
 #Ncon = 1
@@ -46,14 +63,18 @@ weight = np.zeros(Ncon, dtype=fltSize) + w_n*np.e/tau_psc
 
 setCalcParams(Tsim, Nneur, Ncon, recInt, h)
 
-Vm = np.zeros(Nneur, dtype=fltSize) + 32.906693
 Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype=fltSize)
-ns = np.zeros(Nneur, dtype=fltSize) + 0.574676
-ms = np.zeros(Nneur, dtype=fltSize) + 0.913177
-hs = np.zeros(Nneur, dtype=fltSize) + 0.223994
+#Vm = np.zeros(Nneur, dtype=fltSize) + 32.906693
+#ns = np.zeros(Nneur, dtype=fltSize) + 0.574676
+#ms = np.zeros(Nneur, dtype=fltSize) + 0.913177
+#hs = np.zeros(Nneur, dtype=fltSize) + 0.223994
+Vm = np.zeros(Nneur, dtype=fltSize) + -60.8457
+ns = np.zeros(Nneur, dtype=fltSize) + 0.3763
+ms = np.zeros(Nneur, dtype=fltSize) + 0.0833
+hs = np.zeros(Nneur, dtype=fltSize) + 0.4636
 
 NnumSp = 1
-wInc = 1.3
+wInc = 0.0
 nums = np.zeros(Nneur, dtype='uint32')
 incTimes = np.zeros((NnumSp, Nneur), dtype='uint32')
 incSpWeights = np.zeros((NnumSp, Nneur), dtype=fltSize) + wInc*np.e/tau_psc
@@ -88,7 +109,7 @@ setConns(weight, delay,  pre, post)
 simulate()
 #%%
 #pl.figure()
-#pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, ::2])
+#pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, ::10])
 #pl.xlabel('time, ms')
 #pl.ylabel('Membrane potential, mV')
 #pl.show()
@@ -97,28 +118,34 @@ simulate()
 #pl.figure()
 ## combine all spike
 #spikes = spike_times[:num_spikes_neur[0], 0]
+#senders = np.array([0]*num_spikes_neur[0])
 #for i, nsp in zip(xrange(1, Nneur), num_spikes_neur[1:]):
 #    spikes = np.concatenate((spikes, spike_times[:nsp, i]))
+#    senders = np.concatenate((senders, [i]*nsp))
 #
+#pl.plot(spikes*h, senders, '.')
+####pl.xlim((0, 200))
+#pl.show()
+
 #pl.hist(spikes*h, bins=int(SimTime/20), histtype='step')
 #pl.xlabel('time, ms')
-##pl.ylabel('Membrane potential, mV')
+#pl.ylabel('Membrane potential, mV')
 #pl.show()
-##
+#
 #%%
-pl.figure(1)
-msc = np.zeros(np.shape(spike_times), dtype='bool')
-lastSpikeTime = np.zeros(Nneur)
-for i, n in enumerate(num_spikes_neur):
-    if n != 0:
-        lastSpikeTime[i] = spike_times[n - 1, i]
-        if n < Ntrans:
-            lastSpikeTime[i] = np.nan
-    else:
-        lastSpikeTime[i] = np.nan
-
-pl.plot(dts*h, np.ma.array((Ntrans*T + h*dts) - h*lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime)), '-')
-pl.plot(arange(0, T, 0.01), arange(0, T, 0.01))
-pl.ylim((0, T))
-pl.xlim((0, T))
-pl.show()
+#pl.figure(1)
+#msc = np.zeros(np.shape(spike_times), dtype='bool')
+#lastSpikeTime = np.zeros(Nneur)
+#for i, n in enumerate(num_spikes_neur):
+#    if n != 0:
+#        lastSpikeTime[i] = spike_times[n - 1, i]
+#        if n < Ntrans:
+#            lastSpikeTime[i] = np.nan
+#    else:
+#        lastSpikeTime[i] = np.nan
+#
+#pl.plot(dts*h, np.ma.array((Ntrans*T + h*dts) - h*lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime)), '-')
+#pl.plot(arange(0, T, 0.01), arange(0, T, 0.01))
+#pl.ylim((0, T))
+#pl.xlim((0, T))
+#pl.show()

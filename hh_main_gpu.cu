@@ -39,30 +39,30 @@ float hh_Vm(float V, float n_ch, float m_ch, float h_ch, float I, float h){
 
 __device__
 float hh_n_ch(float V, float n_ch, float h){
-    float temp = 1.0 - exp(-(V + 55.0)*0.1);
-    if (temp != 0.0){
-        return (.01*(1.0 - n_ch)*(V + 55.0)/temp - 0.125*n_ch*exp(-(V + 65.0)*0.0125))*h;
+    float temp = 1.0f - exp(-(V + 55.0f)*0.1f);
+    if (temp != 0.0f){
+        return (.01f*(1.0f - n_ch)*(V + 55.0f)/temp - 0.125f*n_ch*exp(-(V + 65.0f)*0.0125f))*h;
     } else {
 //      printf("dividing to zero while calculating n! \n");
 //      to understand why it'so, calculate the limit for v/(1 - exp(v/10)) then v tend to 0
-        return (0.1*(1.0 - n_ch)- 0.125*n_ch*exp(-(V + 65.0)*0.0125))*h;
+        return (0.1f*(1.0f - n_ch)- 0.125f*n_ch*exp(-(V + 65.0f)*0.0125f))*h;
     }
 }
 
 __device__
 float hh_m_ch(float V, float m_ch, float h){
-    float temp = 1.0 - exp(-(V + 40.0)*0.1);
-    if (temp != 0.0){
-        return (0.1*(1.0 - m_ch)*(V + 40.0)/temp - 4.0*m_ch*exp(-(V + 65.0)*0.055555556))*h;
+    float temp = 1.0f - exp(-(V + 40.0f)*0.1f);
+    if (temp != 0.0f){
+        return (0.1f*(1.0f - m_ch)*(V + 40.0f)/temp - 4.0f*m_ch*exp(-(V + 65.0f)*0.055555556f))*h;
     } else {
 //      printf("dividing to zero while calculating  m! \n");
-        return ((1.0 - m_ch) - 4.0*m_ch*exp(-(V + 65.0)*0.055555556))*h;
+        return ((1.0f - m_ch) - 4.0f*m_ch*exp(-(V + 65.0f)*0.055555556f))*h;
     }
 }
 
 __device__
 float hh_h_ch(float V, float h_ch, float h){
-    return (0.07*(1.0 - h_ch)*exp(-(V + 65.0)*0.05) - h_ch/(1.0 + exp(-(V + 35.0)*0.1)))*h;
+    return (0.07f*(1.0f - h_ch)*exp(-(V + 65.0f)*0.05f) - h_ch/(1.0f + exp(-(V + 35.0f)*0.1f)))*h;
 }
 
 __global__
@@ -87,7 +87,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
                        unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
     unsigned int n = blockIdx.x*blockDim.x + threadIdx.x;
     if (n < Nneur){
-        float I_syn_half = (nv.y[n]*h*0.5 + nv.Isyn[n])*exp_psc_half;
+        float I_syn_half = (nv.y[n]*h*0.5f + nv.Isyn[n])*exp_psc_half;
 
 
         // if where is poisson impulse on neuron
@@ -112,7 +112,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
         float Inoise_;
         float ns1, ns2, ns3, ns4;
 
-        float dNoise = 0.0;
+        float dNoise = 0.0f;
     //    float dNoise = sqrtf(2.0f*h*D[n])*curand_normal(&state[n]);
 
         V_mem = nv.V[n];
@@ -125,22 +125,22 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
         m1 = hh_m_ch(nv.V[n], nv.m[n], h);
         h1 = hh_h_ch(nv.V[n], nv.h[n], h);
         ns1 = (-nv.Inoise[n]*h + dNoise)/tau_cor;
-        nv.V[n] = V_mem + v1/2.0;
-        nv.n[n] = n_channel + n1/2.0;
-        nv.m[n] = m_channel + m1/2.0;
-        nv.h[n] = h_channel + h1/2.0;
-        nv.Inoise[n] = Inoise_ + ns1/2.0;
+        nv.V[n] = V_mem + v1/2.0f;
+        nv.n[n] = n_channel + n1/2.0f;
+        nv.m[n] = m_channel + m1/2.0f;
+        nv.h[n] = h_channel + h1/2.0f;
+        nv.Inoise[n] = Inoise_ + ns1/2.0f;
 
         v2 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
         n2 = hh_n_ch(nv.V[n], nv.n[n], h);
         m2 = hh_m_ch(nv.V[n], nv.m[n], h);
         h2 = hh_h_ch(nv.V[n], nv.h[n], h);
         ns2 = (-nv.Inoise[n]*h + dNoise)/tau_cor;
-        nv.V[n] = V_mem + v2/2.0;
-        nv.n[n] = n_channel + n2/2.0;
-        nv.m[n] = m_channel + m2/2.0;
-        nv.h[n] = h_channel + h2/2.0;
-        nv.Inoise[n] = Inoise_ + ns2/2.0;
+        nv.V[n] = V_mem + v2/2.0f;
+        nv.n[n] = n_channel + n2/2.0f;
+        nv.m[n] = m_channel + m2/2.0f;
+        nv.h[n] = h_channel + h2/2.0f;
+        nv.Inoise[n] = Inoise_ + ns2/2.0f;
 
 
         v3 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
@@ -163,16 +163,16 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
         h4 = hh_h_ch(nv.V[n], nv.h[n], h);
         ns4 = (-nv.Inoise[n]*h + dNoise)/tau_cor;
 
-        nv.V[n] = V_mem + (v1 + 2.0*(v2 + v3) + v4)/6.0;
-        nv.n[n] = n_channel + (n1 + 2.0*(n2 + n3) + n4)/6.0;
-        nv.m[n] = m_channel + (m1 + 2.0*(m2 + m3) + m4)/6.0;
-        nv.h[n] = h_channel + (h1 + 2.0*(h2 + h3) + h4)/6.0;
-        nv.Inoise[n] = Inoise_ + (ns1 + 2.0*(ns2 + ns3) + ns4)/6.0;
+        nv.V[n] = V_mem + (v1 + 2.0f*(v2 + v3) + v4)/6.0f;
+        nv.n[n] = n_channel + (n1 + 2.0f*(n2 + n3) + n4)/6.0f;
+        nv.m[n] = m_channel + (m1 + 2.0f*(m2 + m3) + m4)/6.0f;
+        nv.h[n] = h_channel + (h1 + 2.0f*(h2 + h3) + h4)/6.0f;
+        nv.Inoise[n] = Inoise_ + (ns1 + 2.0f*(ns2 + ns3) + ns4)/6.0f;
 
         // checking if there's spike on neuron
         if (nv.V[n] > V_peak && V_mem > nv.V[n] && nv.V_last[n] <= V_mem){
             // second condition is necessary in the presence of noise
-            if (num_spike_neur[n] == 0 || t - spike_time[Nneur*(num_spike_neur[n] - 1) + n] > 5.0/h){
+            if (num_spike_neur[n] == 0 || t - spike_time[Nneur*(num_spike_neur[n] - 1) + n] > 5.0f/h){
                 spike_time[Nneur*num_spike_neur[n] + n] = t;
                 num_spike_neur[n]++;
             }

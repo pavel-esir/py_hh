@@ -79,7 +79,7 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, u
     cudaMalloc((void**) &hh::num_spike_syn, Ncon*sizeof(unsigned int));
 
     cudaMemset(hh::Inoise, 0, Nneur*sizeof(float));
-    fillFloatArr_gpu(Nneur, hh::V_m_last, 100.0f);
+    fillFloatArr_gpu(Nneur, hh::V_m_last, 0.0f);
     cudaMemset(hh::num_spike_syn, 0, Ncon*sizeof(unsigned int));
 }
 
