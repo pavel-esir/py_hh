@@ -28,7 +28,6 @@ struct RecordVars{
 };
 
 struct IncSpikes{
-    unsigned int MAXSZ; // [maximum(over all neurons) number of incoming spikes
     unsigned int *times; // size of times is  (MaxNumIncom, Nneur)
     float *weights;
     unsigned int *nums;

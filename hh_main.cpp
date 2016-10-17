@@ -66,7 +66,47 @@ namespace hh{
     NeurVars nv;
 }
 
+bool firstRun = true;
+
+void freeMemory(){
+    cudaFree(hh::V_m_last);
+    cudaFree(hh::psn_time);
+    cudaFree(hh::psn_seed);
+    cudaFree(hh::Inoise);
+    cudaFree(hh::num_spike_syn);
+
+    cudaFree(hh::spike_time);
+    cudaFree(hh::num_spike_neur);
+
+    cudaFree(hh::weight);
+    cudaFree(hh::delay);
+    cudaFree(hh::pre_nidx);
+    cudaFree(hh::post_nidx);
+
+    cudaFree(hh::V_m);
+    cudaFree(hh::Vrec);
+    cudaFree(hh::n_ch);
+    cudaFree(hh::m_ch);
+    cudaFree(hh::h_ch);
+
+    cudaFree(hh::I_e);
+    cudaFree(hh::y);
+    cudaFree(hh::I_syn);
+    cudaFree(hh::d_w_p);
+
+    cudaFree(hh::incSpikes.times);
+    cudaFree(hh::incSpikes.weights);
+    cudaFree(hh::incSpikes.nums);
+    cudaFree(hh::incSpikes.numProcessed);
+}
+
 void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h){
+    if (firstRun){
+        firstRun = false;
+    } else {
+        freeMemory();
+    }
+
     hh::Tsim = Tsim;
     hh::Nneur = Nneur;
     hh::Ncon = Ncon;
@@ -146,7 +186,6 @@ void set_incom_spikes(unsigned int *times, unsigned int *nums, float* weights, u
     CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.weights, MaxNumIncom*hh::Nneur*sizeof(float)));
     CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.nums, hh::Nneur*sizeof(unsigned int)));
     CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::incSpikes.numProcessed, hh::Nneur*sizeof(unsigned int)));
-    hh::incSpikes.MAXSZ = MaxNumIncom;
 
     CUDA_CHECK_RETURN(cudaMemcpy(hh::incSpikes.times, times, MaxNumIncom*hh::Nneur*sizeof(unsigned int), cudaMemcpyHostToDevice));
     cudaMemcpy(hh::incSpikes.weights, weights, MaxNumIncom*hh::Nneur*sizeof(float), cudaMemcpyHostToDevice);
@@ -170,8 +209,8 @@ void simulate_cpp(){
 
     rv.V = Vrec;
     rv.interval = recInt;
-    float exp_psc =  exp(-h/tau_psc);
-    float exp_psc_half =  exp(-h*0.5/tau_psc);
+    float exp_psc =  expf(-h/tau_psc);
+    float exp_psc_half =  expf(-h*0.5f/tau_psc);
     
     for (unsigned int t = 0; t < Tsim; t++){
         if (t % 50000 == 0){
