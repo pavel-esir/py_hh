@@ -8,3 +8,5 @@ py_hh.cpp
 !.gitignore
 py_hh_cpu.cpp
 *.odt
+*.npy
+*.pyc
