@@ -10,3 +10,7 @@ py_hh_cpu.cpp
 *.odt
 *.npy
 *.pyc
+!Vm_cycle.npy
+!n_cycle.npy
+!m_cycle.npy
+!h_cycle.npy
