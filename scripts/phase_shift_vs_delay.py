@@ -13,7 +13,7 @@ fltSize = 'float32'
 
 h = 0.02
 T = 20.28
-Ntrans = 20
+Ntrans = 80
 SimTime = T*Ntrans
 Tsim = int(SimTime/h)
 recInt = 400
@@ -82,24 +82,24 @@ phh.setConns(weight, delays,  pre, post)
 phh.simulate()
 #%%
 dphiSteady = np.zeros((Nphis, Ndelays)) + np.nan
+periodSteady = np.zeros((Nphis, Ndelays)) + np.nan
 for i in xrange(Nphis):
     for j in xrange(Ndelays):
         idx1 = 2*i*Ndelays + j
         idx2 = (2*(i + 1))*Ndelays - j - 1
-#        print(idx1, idx2)
-        if (num_spikes_neur[idx1] > Ntrans//2) and (num_spikes_neur[idx2] > Ntrans//2):
-            dphiSteady[i, j] = (h*spike_times[num_spikes_neur[idx1] - 1, idx1] -
-                                   h*spike_times[num_spikes_neur[idx2] - 1, idx2])
-arr = np.abs(np.min([np.abs(dphiSteady), np.abs(dphiSteady) - T], axis=0))
+        spkTime1 = h*spike_times[num_spikes_neur[idx1] - 1, idx1]
+        spkTime2 = h*spike_times[num_spikes_neur[idx2] - 1, idx2]
+        if (spkTime1 > SimTime - 2*T) and (spkTime2 > SimTime - 2*T):
+            dphiSteady[i, j] = (spkTime1 - spkTime2)
+            periodSteady[i, j] = spkTime1 - h*spike_times[num_spikes_neur[idx1] - 2, idx1]
+arr = np.abs(np.min([np.abs(dphiSteady), np.abs(dphiSteady) - periodSteady], axis=0))
 mArr = np.ma.array(arr, mask=(dphiSteady != dphiSteady))
 #%%
-#pl.figure()
-#pl.hist(mArr[:, 10//dDelay].compressed() % T, bins=100)
+pl.figure()
+pl.hist(mArr[:, 10//dDelay].compressed() % T, bins=100, range=(0, T))
 #%%
 pl.figure()
-#pl.pcolormesh(delaysRange*h, phisRange*h, mArr)
-#pl.pcolormesh(delaysRange*h, phisRange*h, np.ma.masked_greater(mArr, 800))
-pl.pcolormesh(delaysRange*h, phisRange*h, np.ma.masked_outside(mArr, -T, T))
+pl.pcolormesh(delaysRange*h, phisRange*h, mArr)
 cb = pl.colorbar()
 cb.set_clim(vmin=-20., vmax=21.0)
 pl.xlim((0, T))
@@ -121,13 +121,12 @@ pl.show()
 #pl.hist(mArr[:, 6.0//0.1].compressed(), bins=100, range=(0, T))
 #pl.show()
 #%%
+pl.figure()
 from scipy.signal import argrelextrema
 for i, d in enumerate(delaysRange):
     hst, bins= np.histogram(mArr[:, i].compressed(), bins=100, range=(0, T + 1))
     indices = argrelextrema(hst, np.greater)[0]
-#    print(len(indices))
     pl.scatter([d*h]*len(indices), bins[indices])
-#pl.plot(bins[:-1], hst)
 
 #%%
 #phiIdx = int(8.0/dphi)
