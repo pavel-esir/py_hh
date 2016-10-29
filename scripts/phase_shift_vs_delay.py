@@ -13,10 +13,10 @@ fltSize = 'float32'
 
 h = 0.02
 T = 20.28
-Ntrans = 80
+Ntrans = 40
 SimTime = T*Ntrans
 Tsim = int(SimTime/h)
-recInt = 400
+recInt = 800
 
 I = 5.27
 w = 1.
@@ -92,21 +92,18 @@ for i in xrange(Nphis):
         if (spkTime1 > SimTime - 2*T) and (spkTime2 > SimTime - 2*T):
             dphiSteady[i, j] = (spkTime1 - spkTime2)
             periodSteady[i, j] = spkTime1 - h*spike_times[num_spikes_neur[idx1] - 2, idx1]
-arr = np.abs(np.min([np.abs(dphiSteady), np.abs(dphiSteady) - periodSteady], axis=0))
-mArr = np.ma.array(arr, mask=(dphiSteady != dphiSteady))
-#%%
-pl.figure()
-pl.hist(mArr[:, 10//dDelay].compressed() % T, bins=100, range=(0, T))
+arr = np.abs(np.min([np.abs(dphiSteady), periodSteady - np.abs(dphiSteady)], axis=0))
+mArr = np.ma.masked_invalid(arr)
+periodSteady = np.ma.masked_invalid(periodSteady)
 #%%
 pl.figure()
 pl.pcolormesh(delaysRange*h, phisRange*h, mArr)
 cb = pl.colorbar()
-cb.set_clim(vmin=-20., vmax=21.0)
+#cb.set_clim(vmin=0., vmax=21.0)
 pl.xlim((0, T))
 pl.ylim((0, T))
 pl.xlabel("Delay[ms]")
 pl.ylabel(r"$\Delta \varphi$ [ms]")
-pl.show()
 #%%
 #d = 1.0
 #pl.figure()
@@ -117,17 +114,23 @@ pl.show()
 #pl.xlim((0, T))
 #pl.show()
 #%%
-#pl.figure()
-#pl.hist(mArr[:, 6.0//0.1].compressed(), bins=100, range=(0, T))
-#pl.show()
-#%%
 pl.figure()
+maxPeriod = periodSteady.max()
+Nbins = mArr.max()//0.1
+tmpArr = np.zeros(Nbins + 2)
+
 from scipy.signal import argrelextrema
 for i, d in enumerate(delaysRange):
-    hst, bins= np.histogram(mArr[:, i].compressed(), bins=100, range=(0, T + 1))
-    indices = argrelextrema(hst, np.greater)[0]
-    pl.scatter([d*h]*len(indices), bins[indices])
+    hst, bins = np.histogram(mArr[:, i].compressed(), bins=Nbins, range=(0, mArr.max()))
+    tmpArr[1:-1] = hst
+    indices = argrelextrema(tmpArr, np.greater)[0]
+    pl.scatter([d*h]*len(indices), bins[indices-1])
 
+#    hst, bins = np.histogram(periodSteady[:, i].compressed(), bins=100, range=(0, 21))
+#    indices = argrelextrema(hst, np.greater)[0]
+#    pl.scatter([d*h]*len(indices), bins[indices], color='g')
+pl.xlim(0, T)
+pl.ylim(0, mArr.max()+1)
 #%%
 #phiIdx = int(8.0/dphi)
 #(f, ax) = pl.subplots(Ndelays, 1, sharex=True)
@@ -137,4 +140,4 @@ for i, d in enumerate(delaysRange):
 #    a.set_xlim((0, SimTime))
 #
 #pl.xlabel('time, ms')
-#pl.show()
+pl.show()
