@@ -32,10 +32,12 @@ namespace hh{
     float h;
 
     float *V_m;
+    float *V_m_out;
     float *V_m_last;
     float *Vrec;
     float *Vrec_out;
     float *n_ch, *m_ch, *h_ch;
+    float *n_out, *m_out, *h_out;
     unsigned int *spike_time, *num_spike_neur, *num_spike_syn;
     unsigned int *spike_time_out, *num_spike_neur_out;
     unsigned int numSpikeSz;
@@ -160,6 +162,10 @@ void set_neur_vars(float *V_m, float *Vrec, float *n_ch, float *m_ch, float *h_c
     cudaMemcpy(hh::m_ch, m_ch, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
     cudaMemcpy(hh::h_ch, h_ch, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
     hh::Vrec_out = Vrec;
+    hh::V_m_out = V_m;
+    hh::n_out = n_ch;
+    hh::m_out = m_ch;
+    hh::h_out = h_ch;
 }
 
 void set_currents(float *I_e, float *y, float *I_syn, float rate, float tau_psc, float *d_w_p, unsigned int seed){
@@ -226,6 +232,10 @@ void simulate_cpp(){
     }
 
     cudaMemcpy(Vrec_out, Vrec, sizeof(float)*Nneur*(Tsim + recInt - 1) / recInt, cudaMemcpyDeviceToHost);
+    cudaMemcpy(V_m_out, V_m, sizeof(float)*Nneur, cudaMemcpyDeviceToHost);
+    cudaMemcpy(n_out, n_ch, sizeof(float)*Nneur, cudaMemcpyDeviceToHost);
+    cudaMemcpy(m_out, m_ch, sizeof(float)*Nneur, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_out, h_ch, sizeof(float)*Nneur, cudaMemcpyDeviceToHost);
     cudaMemcpy(spike_time_out, spike_time, numSpikeSz*sizeof(unsigned int), cudaMemcpyDeviceToHost);
     cudaMemcpy(num_spike_neur_out, num_spike_neur, sizeof(unsigned int)*Nneur, cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();

@@ -13,13 +13,13 @@ fltSize = 'float32'
 
 h = 0.02
 T = 20.28
-Ntrans = 40
+Ntrans = 50
 SimTime = T*Ntrans
 Tsim = int(SimTime/h)
 recInt = 800
 
 I = 5.27
-w = 1.
+w = 1.0
 w_p = 0.00
 rate = 50.0 # Hz
 tau_psc = 0.2
@@ -83,6 +83,7 @@ phh.simulate()
 #%%
 dphiSteady = np.zeros((Nphis, Ndelays)) + np.nan
 periodSteady = np.zeros((Nphis, Ndelays)) + np.nan
+Nmeans = 20
 for i in xrange(Nphis):
     for j in xrange(Ndelays):
         idx1 = 2*i*Ndelays + j
@@ -90,8 +91,12 @@ for i in xrange(Nphis):
         spkTime1 = h*spike_times[num_spikes_neur[idx1] - 1, idx1]
         spkTime2 = h*spike_times[num_spikes_neur[idx2] - 1, idx2]
         if (spkTime1 > SimTime - 2*T) and (spkTime2 > SimTime - 2*T):
-            dphiSteady[i, j] = (spkTime1 - spkTime2)
-            periodSteady[i, j] = spkTime1 - h*spike_times[num_spikes_neur[idx1] - 2, idx1]
+            dphiSteady[i, j] = np.mean(h*spike_times[num_spikes_neur[idx1] - Nmeans:num_spikes_neur[idx1] - 1, idx1] -
+                               h*spike_times[num_spikes_neur[idx2] - Nmeans:num_spikes_neur[idx2] - 1, idx2])
+            periodSteady[i, j] = np.mean(h*spike_times[num_spikes_neur[idx1] - Nmeans:num_spikes_neur[idx1] - 1, idx1] -
+                               h*spike_times[num_spikes_neur[idx1] - 1 - Nmeans:num_spikes_neur[idx1] - 2, idx1])
+#            dphiSteady[i, j] = spkTime1 - spkTime2
+#            periodSteady[i, j] = spkTime1 - h*spike_times[num_spikes_neur[idx1] - 2, idx1]
 arr = np.abs(np.min([np.abs(dphiSteady), periodSteady - np.abs(dphiSteady)], axis=0))
 mArr = np.ma.masked_invalid(arr)
 periodSteady = np.ma.masked_invalid(periodSteady)
@@ -115,8 +120,7 @@ pl.ylabel(r"$\Delta \varphi$ [ms]")
 #pl.show()
 #%%
 pl.figure()
-maxPeriod = periodSteady.max()
-Nbins = mArr.max()//0.1
+Nbins = int(mArr.max()//0.1)
 tmpArr = np.zeros(Nbins + 2)
 
 from scipy.signal import argrelextrema
@@ -124,13 +128,15 @@ for i, d in enumerate(delaysRange):
     hst, bins = np.histogram(mArr[:, i].compressed(), bins=Nbins, range=(0, mArr.max()))
     tmpArr[1:-1] = hst
     indices = argrelextrema(tmpArr, np.greater)[0]
-    pl.scatter([d*h]*len(indices), bins[indices-1])
+    pl.scatter([d*h]*len(indices), bins[indices - 1])
 
-#    hst, bins = np.histogram(periodSteady[:, i].compressed(), bins=100, range=(0, 21))
-#    indices = argrelextrema(hst, np.greater)[0]
-#    pl.scatter([d*h]*len(indices), bins[indices], color='g')
+    hst, bins = np.histogram(periodSteady[:, i].compressed(), bins=Nbins, range=(0, periodSteady.max()))
+    tmpArr[1:-1] = hst
+    indices = argrelextrema(hst, np.greater)[0]
+    pl.scatter([d*h]*len(indices), bins[indices - 1], color='g')
 pl.xlim(0, T)
-pl.ylim(0, mArr.max()+1)
+pl.ylim(0, 25)
+#pl.ylim(0, mArr.max()+1)
 #%%
 #phiIdx = int(8.0/dphi)
 #(f, ax) = pl.subplots(Ndelays, 1, sharex=True)
