@@ -10,21 +10,21 @@ import numpy as np
 import matplotlib.pylab as pl
 np.random.seed(0)
 
-Ntrans = 3 # length of transient process in periods, integer
-T = 20.275
-#SimTime = (Ntrans+0.5)*T
-SimTime = 2000.
+Ntrans = 40 # length of transient process in periods, integer
+T = 20.28
+SimTime = (Ntrans+0.5)*T
+#SimTime = 200.
 h = 0.02
 Tsim = int(SimTime/h)
-recInt = 200000
+recInt = 1
 
 tau_psc = 0.2  # ms
-w_p = 1.98      # Poisson noise weith, pA
-w_n = 1.3      # connection weight, pA
+w_p = 0.0      # Poisson noise weith, pA
+w_n = 1.0      # connection weight, pA
 
-rate = 185.0     # Poisson noise rate, Hz (shouldn't  be 0)
-Nneur = 100
-Ncon = int(Nneur*Nneur*0.2)
+#rate = 185.0     # Poisson noise rate, Hz (shouldn't  be 0)
+#Nneur = 100
+#Ncon = int(Nneur*Nneur*0.2)
 #Nneur = int(T/h)
 #Ncon = 1
 #pre = np.random.randint(0, Nneur, Ncon).astype('uint32')
@@ -32,28 +32,12 @@ Ncon = int(Nneur*Nneur*0.2)
 #delay = np.array([4.0/h]*Ncon).astype('uint32') # delay arrays in time frames
 #delay = np.random.lognormal(1.8, 1/6.0, Ncon).astype('uint32') # delay arrays in time frames
 
-import csv
-f = open('nn_params_100.csv', 'r')
-rdr = csv.reader(f, delimiter=' ')
-pre = []
-post = []
-delay = []
-for l in rdr:
-    pre.append(l[0])
-    post.append(l[1])
-    delay.append(l[2])
-
-pre = np.array(pre).astype('uint32')
-post = np.array(post).astype('uint32')
-delay = (np.array(delay, dtype='float')/h).astype('uint32')
-Ncon = len(pre)
-
-#Nneur = 2
-#Ncon = 1
-#pre = np.array([0], dtype='uint32')
-#post = np.array([1], dtype='uint32')
-#delay = np.array([10./h], dtype='uint32') # delay arrays in time frames
-#rate = 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
+Nneur = 2
+Ncon = 2
+pre = np.array([0, 1], dtype='uint32')
+post = np.array([1, 0], dtype='uint32')
+delay = (np.ones(Ncon)*12.0/h).astype('uint32') # delay arrays in time frames
+rate = 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
 
 # int(SimTime/10) тут 10 это период в мс максимального ожидаемого интервала между спайками
 spike_times = np.zeros((int(SimTime/10) + 2, Nneur), dtype='uint32')
@@ -64,14 +48,17 @@ weight = np.zeros(Ncon, dtype=fltSize) + w_n*np.e/tau_psc
 setCalcParams(Tsim, Nneur, Ncon, recInt, h)
 
 Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype=fltSize)
-#Vm = np.zeros(Nneur, dtype=fltSize) + 32.906693
-#ns = np.zeros(Nneur, dtype=fltSize) + 0.574676
-#ms = np.zeros(Nneur, dtype=fltSize) + 0.913177
-#hs = np.zeros(Nneur, dtype=fltSize) + 0.223994
-Vm = np.zeros(Nneur, dtype=fltSize) + -60.8457
-ns = np.zeros(Nneur, dtype=fltSize) + 0.3763
-ms = np.zeros(Nneur, dtype=fltSize) + 0.0833
-hs = np.zeros(Nneur, dtype=fltSize) + 0.4636
+
+v0, n0, m0, h0 = 32.906693, 0.574676, 0.913177, 0.223994
+Vm = np.zeros(Nneur, dtype=fltSize) + v0
+ns = np.zeros(Nneur, dtype=fltSize) + n0
+ms = np.zeros(Nneur, dtype=fltSize) + m0
+hs = np.zeros(Nneur, dtype=fltSize) + h0
+dPhase = int(13.0/0.02)
+Vm[1] = np.load('../Vm_cycle.npy')[dPhase]
+ns[1] = np.load('../n_cycle.npy')[dPhase]
+ms[1] = np.load('../m_cycle.npy')[dPhase]
+hs[1] = np.load('../h_cycle.npy')[dPhase]
 
 NnumSp = 1
 wInc = 0.0
@@ -107,13 +94,16 @@ setSpikeTimes(spike_times, num_spikes_neur, np.shape(spike_times)[0]*Nneur)
 setConns(weight, delay,  pre, post)
 #%%
 simulate()
+if num_spikes_neur[0] > int(Ntrans/2)and num_spikes_neur[1] > int(Ntrans/2):
+    print(abs(spike_times[num_spikes_neur[0] - 1, 0]*h - spike_times[num_spikes_neur[1] - 1, 1]*h))
 #%%
-#pl.figure()
-#pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, ::10])
-#pl.xlabel('time, ms')
-#pl.ylabel('Membrane potential, mV')
-#pl.show()
-#pl.xlim((0, SimTime))
+pl.figure()
+pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, ::1])
+pl.xlabel('time, ms')
+pl.ylabel('Membrane potential, mV')
+pl.show()
+pl.xlim((0, SimTime))
+#np.save('h_cycle.npy', Vrec[4054:5069, 0])
 #%%
 #pl.figure()
 ## combine all spike
