@@ -82,7 +82,7 @@ void integrate_synapses(unsigned int t, unsigned int Ncon, unsigned int Nneur, u
 }
 
 __global__
-void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time,
+void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float *rate, unsigned int *psn_seed, unsigned int *psn_time,
                        float exp_psc, float exp_psc_half, float tau_cor, NeurVars nv, RecordVars rv,
                        unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
     unsigned int n = blockIdx.x*blockDim.x + threadIdx.x;
@@ -97,7 +97,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
             // random number we get exponentially distributed random number
             // for Poisson process time interals between impulses are exponentially distributed
             // sign of right part is negative hence here is "-="
-            psn_time[n] += (unsigned int) (-1000.0f*log(get_random(psn_seed + n))/(rate*h));
+            psn_time[n] += (unsigned int) (-1000.0f*log(get_random(psn_seed + n))/(rate[n]*h));
         }
 
         while (incSpikes.numProcessed[n] < incSpikes.nums[n] && incSpikes.times[Nneur*incSpikes.numProcessed[n] + n] == t){
@@ -187,11 +187,11 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float rate, 
 }
 
 __global__
-void init_noise(unsigned int seed, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time){
+void init_noise(unsigned int seed, unsigned int Nneur, float h, float *rate, unsigned int *psn_seed, unsigned int *psn_time){
     unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < Nneur){
         psn_seed[i] = 100000*(seed + i + 1);
-        psn_time[i] = 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate*h));
+        psn_time[i] = 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate[i]*h));
     }
 }
 
@@ -203,7 +203,7 @@ void fillFloatArr(unsigned int size, float *arr, float val){
     }
 }
 
-void init_noise_gpu(unsigned int seed, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time){
+void init_noise_gpu(unsigned int seed, unsigned int Nneur, float h, float *rate, unsigned int *psn_seed, unsigned int *psn_time){
     init_noise<<<Nneur/NBlockSz + 1, NBlockSz>>>(seed, Nneur, h, rate, psn_seed, psn_time);
 }
 
@@ -211,7 +211,7 @@ void fillFloatArr_gpu(unsigned int size, float *arr, float val){
     fillFloatArr<<<(size + NBlockSz - 1)/NBlockSz, NBlockSz>>>(size, arr, val);
 }
 
-void integrate_neurons_gpu(unsigned int t, unsigned int Nneur, float h, float rate, unsigned int *psn_seed, unsigned int *psn_time,
+void integrate_neurons_gpu(unsigned int t, unsigned int Nneur, float h, float *rate, unsigned int *psn_seed, unsigned int *psn_time,
         float exp_psc, float exp_psc_half, float tau_cor, NeurVars nv, RecordVars rv, unsigned int *num_spike_neur, unsigned int *spike_time, IncSpikes incSpikes){
     integrate_neurons<<<(Nneur + NBlockSz - 1)/NBlockSz, NBlockSz>>>(t, Nneur, h, rate, psn_seed, psn_time, exp_psc, exp_psc_half, tau_cor, nv, rv,
             num_spike_neur, spike_time, incSpikes);

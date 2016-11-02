@@ -46,7 +46,7 @@ namespace hh{
 
     float *I_e;
     float *y, *I_syn;
-    float rate;
+    float *rate;
     float tau_psc;
     float *d_w_p;
     unsigned int *psn_time, *psn_seed;
@@ -95,6 +95,7 @@ void freeMemory(){
     cudaFree(hh::y);
     cudaFree(hh::I_syn);
     cudaFree(hh::d_w_p);
+    cudaFree(hh::rate);
 
     cudaFree(hh::incSpikes.times);
     cudaFree(hh::incSpikes.weights);
@@ -168,23 +169,24 @@ void set_neur_vars(float *V_m, float *Vrec, float *n_ch, float *m_ch, float *h_c
     hh::h_out = h_ch;
 }
 
-void set_currents(float *I_e, float *y, float *I_syn, float rate, float tau_psc, float *d_w_p, unsigned int seed){
+void set_currents(float *I_e, float *y, float *I_syn, float *rate, float tau_psc, float *d_w_p, unsigned int seed){
     cudaMalloc((void**) &hh::I_e, sizeof(float)*hh::Nneur);
     cudaMalloc((void**) &hh::y, sizeof(float)*hh::Nneur);
     cudaMalloc((void**) &hh::I_syn, sizeof(float)*hh::Nneur);
     cudaMalloc((void**) &hh::d_w_p, sizeof(float)*hh::Nneur);
+    CUDA_CHECK_RETURN(cudaMalloc((void**) &hh::rate, sizeof(float)*hh::Nneur));
 
     cudaMemcpy(hh::I_e, I_e, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
     cudaMemcpy(hh::y, y, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
     cudaMemcpy(hh::I_syn, I_syn, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
     cudaMemcpy(hh::d_w_p, d_w_p, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice);
-
-    hh::rate = rate;
+    CUDA_CHECK_RETURN(cudaMemcpy(hh::rate, rate, sizeof(float)*hh::Nneur, cudaMemcpyHostToDevice));
 
     hh::tau_psc = tau_psc;
 
     using namespace hh;
-    init_noise_gpu(seed, Nneur, h, rate, psn_seed, psn_time);
+    init_noise_gpu(seed, Nneur, h, hh::rate, psn_seed, psn_time);
+    CUDA_CHECK_RETURN(cudaGetLastError());
 }
 
 void set_incom_spikes(unsigned int *times, unsigned int *nums, float* weights, unsigned int MaxNumIncom){
