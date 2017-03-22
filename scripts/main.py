@@ -19,8 +19,8 @@ Tsim = int(SimTime/h)
 recInt = 1
 
 tau_psc = 0.2  # ms
-w_p = 0.0      # Poisson noise weith, pA
-w_n = 1.0      # connection weight, pA
+w_p = 1.0      # Poisson noise weith, pA
+w_n = 0.0      # connection weight, pA
 
 #rate = 185.0     # Poisson noise rate, Hz (shouldn't  be 0)
 #Nneur = 100
@@ -37,7 +37,7 @@ Ncon = 2
 pre = np.array([0, 1], dtype='uint32')
 post = np.array([1, 0], dtype='uint32')
 delay = (np.ones(Ncon)*12.0/h).astype('uint32') # delay arrays in time frames
-rate = 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
+rate = 200.1     # Poisson noise rate, Hz (shouldn't  be 0)
 
 # int(SimTime/10) тут 10 это период в мс максимального ожидаемого интервала между спайками
 spike_times = np.zeros((int(SimTime/10) + 2, Nneur), dtype='uint32')
@@ -98,7 +98,7 @@ if num_spikes_neur[0] > int(Ntrans/2)and num_spikes_neur[1] > int(Ntrans/2):
     print(abs(spike_times[num_spikes_neur[0] - 1, 0]*h - spike_times[num_spikes_neur[1] - 1, 1]*h))
 #%%
 pl.figure()
-pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, ::1])
+pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, :1:1])
 pl.xlabel('time, ms')
 pl.ylabel('Membrane potential, mV')
 pl.show()

@@ -1,5 +1,5 @@
 /*
- * hh_main_gpu.cpp
+ * hh_main_gpu.cu
  *
  *  Created on: 20 июля 2016 г.
  *      Author: Pavel Esir

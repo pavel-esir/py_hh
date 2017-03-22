@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pylab as pl
 np.random.seed(0)
 
-Ntrans = 6 # length of transient process in periods, integer
+Ntrans = 2 # length of transient process in periods, integer
 #T = 20.275
 T = 20.28
 SimTime = (Ntrans+0.5)*T
@@ -82,24 +82,25 @@ simulate()
 #pl.show()
 #pl.xlim((0, SimTime))
 #%%
-#pl.figure(1)
-#lastSpikeTime = np.zeros(Nneur)
-#for i, n in enumerate(num_spikes_neur):
-#    if n < Ntrans:
-#            lastSpikeTime[i] = np.nan
-#    else:
-#        lastSpikeTime[i] = spike_times[Ntrans - 1, i]*h
-#
-#lastSpikeTime = lastSpikeTime.reshape(np.sqrt(Nneur), np.sqrt(Nneur))
-#mArr = np.ma.array(lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime))
-#
-#pl.pcolormesh(dts*h, dts*h, mArr, cmap='jet')
-#pl.colorbar()
-#pl.xlim((0, T))
-#pl.ylim((0, T))
-#
-#pl.plot(dts*h, np.ma.array((Ntrans*T + h*dts) - h*lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime)), '-')
-##pl.plot(arange(0, T, 0.01), arange(0, T, 0.01))
-#pl.ylim((0, T))
-#pl.xlim((0, T))
-#pl.show()
+pl.figure(2)
+lastSpikeTime = np.zeros(Nneur)
+for i, n in enumerate(num_spikes_neur):
+    if n < Ntrans:
+            lastSpikeTime[i] = np.nan
+    else:
+        lastSpikeTime[i] = spike_times[Ntrans - 1, i]*h
+
+lastSpikeTime = lastSpikeTime.reshape(int(np.sqrt(Nneur)), int(np.sqrt(Nneur)))
+mArr = np.ma.array(lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime))
+
+pl.pcolormesh(dts*h, dts*h, mArr, cmap='jet')
+#pl.pcolormesh(dts*h, dts*h, mArr)
+pl.colorbar()
+pl.xlim((0, T))
+pl.ylim((0, T))
+
+pl.plot(dts*h, np.ma.array((Ntrans*T + h*dts) - h*lastSpikeTime, mask=(lastSpikeTime != lastSpikeTime)), '-')
+#pl.plot(arange(0, T, 0.01), arange(0, T, 0.01))
+pl.ylim((0, T))
+pl.xlim((0, T))
+pl.show()
