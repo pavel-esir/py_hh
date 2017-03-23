@@ -181,7 +181,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float *rate,
 
         if (t % rv.interval == 0){
             rv.V[Nneur*t/rv.interval + n] = nv.V[n];
-//            rv.V[Nneur*t/rv.interval + n] = nv.Isyn[n];
+            //rv.V[Nneur*t/rv.interval + n] = nv.Isyn[n];
         }
     }
 }

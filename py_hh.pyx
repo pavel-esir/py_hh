@@ -17,7 +17,7 @@ cdef extern from "hh_main.h":
     
     void set_neur_vars(float *V_m, float *Vrec, float *n_ch, float *m_ch, float *h_ch)
     
-    void set_currents(float *I_e, float *y, float *I_syn, float rate, float tau_psc, float *d_w_p, unsigned int seed)
+    void set_currents(float *I_e, float *y, float *I_syn, float *rate, float tau_psc, float *d_w_p, unsigned int seed)
     
     void set_incom_spikes(unsigned int *times, unsigned int *nums, float *weights, unsigned int MaxNumIncom)
     
@@ -40,9 +40,9 @@ def setNeurVars(np.ndarray[np.float32_t, ndim=1] V_m, np.ndarray[np.float32_t, n
                   <float*> n_ch.data, <float*> m_ch.data, <float*> h_ch.data)
 
 def setCurrents(np.ndarray[np.float32_t, ndim=1] I_e, np.ndarray[np.float32_t, ndim=1] y, 
-                np.ndarray[np.float32_t, ndim=1] I_syn, 
-                float rate, float tau_psc, np.ndarray[np.float32_t, ndim=1] d_w_p, unsigned int seed):
-    set_currents(<float*> I_e.data, <float*> y.data, <float*> I_syn.data, rate, tau_psc, <float*> d_w_p.data, seed)
+                np.ndarray[np.float32_t, ndim=1] I_syn, np.ndarray[np.float32_t, ndim=1] rate, 
+                float tau_psc, np.ndarray[np.float32_t, ndim=1] d_w_p, unsigned int seed):
+    set_currents(<float*> I_e.data, <float*> y.data, <float*> I_syn.data, <float*> rate.data, tau_psc, <float*> d_w_p.data, seed)
 
 def setIncomSpikes(np.ndarray[np.uint32_t, ndim=2] times, np.ndarray[np.uint32_t, ndim=1] nums, np.ndarray[np.float32_t, ndim=2] weights, unsigned int maxnum):
     set_incom_spikes(<unsigned int*> times.data, <unsigned int*> nums.data, <float*> weights.data, maxnum)
