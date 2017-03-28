@@ -34,7 +34,7 @@ namespace hh{
 
     double *I_e;
     double *y, *I_syn;
-    double rate;
+    double *rate;
     double tau_psc;
     double exp_psc;
     double exp_psc_half;
@@ -132,7 +132,7 @@ namespace hh{
             // random number we get exponentially distributed random number
             // for Poisson process time interals between impulses are exponentially distributed
             // sign of right part is negative hence here is "-="
-            psn_time[n] += (unsigned int) (-1000.0*log(get_random(psn_seed + n))/(rate*h));
+            psn_time[n] += (unsigned int) (-1000.0*log(get_random(psn_seed + n))/(rate[n]*h));
         }
 
         while (numProcessed[n] < numIncomSpikes[n] && incSpTimes[Nneur*numProcessed[n] + n] == t){
@@ -268,7 +268,7 @@ void set_neur_vars(double *V_m, double *Vrec, double *n_ch, double *m_ch, double
     hh::h_ch = h_ch;
 }
 
-void set_currents(double *I_e, double *y, double *I_syn, double rate, double tau_psc, double *d_w_p, unsigned int seed){
+void set_currents(double *I_e, double *y, double *I_syn, double *rate, double tau_psc, double *d_w_p, unsigned int seed){
     hh::I_e = I_e;
     hh::y = y;
     hh::I_syn = I_syn;
@@ -297,6 +297,6 @@ void simulate_cpp(){
 void init_noise(unsigned int seed){
     for (unsigned int i = 0; i< Nneur; i++){
         psn_seed[i] = 100000*(seed + i + 1);
-        psn_time[i] = 1 + (unsigned int) (-1000.0*log(get_random(psn_seed + i))/(rate*h));
+        psn_time[i] = 1 + (unsigned int) (-1000.0*log(get_random(psn_seed + i))/(rate[i]*h));
     }
 }

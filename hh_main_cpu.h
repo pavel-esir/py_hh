@@ -14,7 +14,7 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, u
 
 void set_neur_vars(double *V_m, double *Vrec, double *n_ch, double *m_ch, double *h_ch);
 
-void set_currents(double *I_e, double *y, double *I_syn, double rate, double tau_psc, double *d_w_p, unsigned int seed);
+void set_currents(double *I_e, double *y, double *I_syn, double *rate, double tau_psc, double *d_w_p, unsigned int seed);
 
 void set_incom_spikes(unsigned int *times, unsigned int *nums, double *weights, unsigned int MaxNumIncom);
 
