@@ -92,6 +92,9 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float *rate,
 
         // if where is poisson impulse on neuron
         while (psn_time[n] == t){
+        	if (t > nv.cutoff_ns_tm) {
+        		break;
+        	}
             nv.y[n] += nv.weight_p[n];
             // after taking logarithm from uniformly distributed from 0 to 1
             // random number we get exponentially distributed random number

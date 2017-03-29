@@ -20,6 +20,7 @@ struct NeurVars{
     float *y;
     float *Inoise;
     float *weight_p;
+    unsigned int cutoff_ns_tm;
 };
 
 struct RecordVars{

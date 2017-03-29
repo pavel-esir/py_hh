@@ -8,7 +8,7 @@
 #ifndef HH_MAIN_H_
 #define HH_MAIN_H_
 
-void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h);
+void set_calc_params(unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h);
 
 void set_neur_vars(float *V_m, float *Vrec, float *n_ch, float *m_ch, float *h_ch);
 

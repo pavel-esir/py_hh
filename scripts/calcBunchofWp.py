@@ -4,9 +4,9 @@ Created on 29 июня 2016 г.
 
 @author: Pavel Esir
 '''
-fltSize = 'float32'
+fltSize = 'float64'
 
-import py_hh as phh
+import py_hh_cpu as phh
 import numpy as np
 from numpy import random
 import matplotlib.pylab as pl
@@ -15,20 +15,22 @@ from distribute_delays import getDelays
 random.seed(0)
 psn_seed = 0
 
-SimTime = 1000000.
+SimTime = 30000.
 h = 0.02
+Tcutoff = int(21200./h)
 Tsim = int(SimTime/h)
 recInt = np.iinfo(np.int32).max
 #recInt = 4
 
-w_ps = np.arange(1.92, 1.971, 0.01)
+w_ps = np.arange(1.88, 1.951, 0.01)
+w_ps = [1.93]
 nw = len(w_ps)
 
-N = 200
+N = 100
 Nneur = N*nw
 
 tau_psc = 0.2   # ms
-w_n = 1.0       # connection weight, pA
+w_n = 1.3       # connection weight, pA
 I0 = 5.27
 
 rate = np.zeros(Nneur, dtype=fltSize) + 185.0    # Poisson noise rate, Hz (shouldn't  be 0)
@@ -36,7 +38,7 @@ rate = np.zeros(Nneur, dtype=fltSize) + 185.0    # Poisson noise rate, Hz (shoul
 #pcon = 0.3
 #N = 100
 #w_n = 1
-Ncon = int(N*N*0.15)
+Ncon = int(N*N*0.21)
 #Ncon = 2
 pre = np.zeros(Ncon*nw, dtype='uint32')
 post = np.zeros(Ncon*nw, dtype='uint32')
@@ -46,7 +48,8 @@ d_w_p = np.zeros(Nneur, dtype=fltSize)
 np.random.seed(0)
 preTmp = random.randint(0, N, Ncon).astype('uint32')
 postTmp = random.randint(0, N, Ncon).astype('uint32')
-delaysTmp = (getDelays(Ncon)/h).astype('uint32')
+#delaysTmp = (getDelays(Ncon)/h).astype('uint32')
+delaysTmp = np.zeros(Ncon, dtype='uint32') + int(3.5/h)
 
 #preTmp = np.array([0, 1], dtype='uint32')
 #postTmp = np.array([1, 0], dtype='uint32')
@@ -98,7 +101,7 @@ nums = np.zeros(Nneur, dtype='uint32') + 1
 incTimes = np.zeros((NnumSp, Nneur), dtype='uint32')
 incSpWeights = np.zeros((NnumSp, Nneur), dtype=fltSize) + wInc*np.e/tau_psc
 #%%
-phh.setCalcParams(Tsim, Nneur, Ncon*nw, recInt, h)
+phh.setCalcParams(Tsim, Tcutoff, Nneur, Ncon*nw, recInt, h)
 
 phh.setIncomSpikes(incTimes, nums, incSpWeights, NnumSp)
 phh.setNeurVars(Vm, Vrec, ns, ms, hs)
@@ -132,6 +135,8 @@ for i, nsp in zip(xrange(1, Nneur), num_spikes_neur[1:]):
     senders = np.concatenate((senders, [i]*nsp))
 
 (f, ax) = pl.subplots(nw, 1, sharex=True, sharey=True)
+if type(ax) != np.ndarray:
+    ax = [ax]
 #(f2, ax2) = pl.subplots(nw, 1, sharex=True, sharey=True)
 #for idx, (a, a2) in enumerate(zip(ax, ax2)):
 for idx, a in enumerate(ax):

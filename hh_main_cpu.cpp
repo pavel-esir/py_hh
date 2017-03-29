@@ -25,6 +25,7 @@ namespace hh{
     unsigned int Ncon;
     unsigned int recInt;
     double h;
+    unsigned int cutoff_ns_tm;
 
     double *V_m;
     double *V_m_last;
@@ -127,6 +128,9 @@ namespace hh{
 
         // if where is poisson impulse on neuron
         while (psn_time[n] == t){
+        	if (t > cutoff_ns_tm) {
+        		break;
+        	}
             y[n] += d_w_p[n];
             // after taking logarithm from uniformly distributed from 0 to 1
             // random number we get exponentially distributed random number
@@ -223,12 +227,13 @@ namespace hh{
     }
 }
 
-void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h){
+void set_calc_params(unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h){
     hh::Tsim = Tsim;
     hh::Nneur = Nneur;
     hh::Ncon = Ncon;
     hh::recInt = recInt;
     hh::h = h;
+    hh::cutoff_ns_tm = cutoff_ns_tm;
     hh::V_m_last = new double[Nneur]();
     for (unsigned int i = 0; i < Nneur; i++){
         hh::V_m_last[i] = 100.0;
@@ -285,6 +290,9 @@ using namespace hh;
 
 void simulate_cpp(){
     for (unsigned int t = 0; t < Tsim; t++){
+        if (t % 50000 == 0){
+            printf("%.3f\n", t*h);
+        }
         for (unsigned int i = 0; i < Nneur; i++){
             integrate_neurons(t, i);
         }

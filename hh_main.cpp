@@ -30,6 +30,7 @@ namespace hh{
     unsigned int Ncon;
     unsigned int recInt;
     float h;
+    unsigned int cutoff_ns_tm;
 
     float *V_m;
     float *V_m_out;
@@ -103,7 +104,7 @@ void freeMemory(){
     cudaFree(hh::incSpikes.numProcessed);
 }
 
-void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h){
+void set_calc_params(unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h){
     if (firstRun){
         firstRun = false;
     } else {
@@ -115,6 +116,7 @@ void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, u
     hh::Ncon = Ncon;
     hh::recInt = recInt;
     hh::h = h;
+    hh::cutoff_ns_tm = cutoff_ns_tm;
     cudaMalloc((void**) &hh::V_m_last, Nneur*sizeof(float));
     cudaMalloc((void**) &hh::psn_time, Nneur*sizeof(unsigned int));
     cudaMalloc((void**) &hh::psn_seed, Nneur*sizeof(unsigned int));
@@ -214,6 +216,7 @@ void simulate_cpp(){
     nv.y = y;
     nv.Inoise = Inoise;
     nv.weight_p = d_w_p;
+    nv.cutoff_ns_tm = cutoff_ns_tm;
 
     rv.V = Vrec;
     rv.interval = recInt;

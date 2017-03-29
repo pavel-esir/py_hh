@@ -10,7 +10,7 @@
 
 void init_noise(unsigned int seed);
 
-void set_calc_params(unsigned int Tsim, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h);
+void set_calc_params(unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, double h);
 
 void set_neur_vars(double *V_m, double *Vrec, double *n_ch, double *m_ch, double *h_ch);
 
