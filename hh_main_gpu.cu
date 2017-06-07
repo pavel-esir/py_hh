@@ -118,6 +118,9 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float *rate,
         float dNoise = 0.0f;
     //    float dNoise = sqrtf(2.0f*h*D[n])*curand_normal(&state[n]);
 
+        float Isyn_new  = (nv.y[n]*h + nv.Isyn[n])*exp_psc;
+
+
         V_mem = nv.V[n];
         n_channel = nv.n[n];
         m_channel = nv.m[n];
@@ -134,7 +137,8 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float *rate,
         nv.h[n] = h_channel + h1/2.0f;
         nv.Inoise[n] = Inoise_ + ns1/2.0f;
 
-        v2 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
+//        v2 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
+        v2 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], (nv.Isyn[n] + Isyn_new)*0.5f + nv.Inoise[n] + nv.Ie[n], h);
         n2 = hh_n_ch(nv.V[n], nv.n[n], h);
         m2 = hh_m_ch(nv.V[n], nv.m[n], h);
         h2 = hh_h_ch(nv.V[n], nv.h[n], h);
@@ -146,7 +150,8 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float *rate,
         nv.Inoise[n] = Inoise_ + ns2/2.0f;
 
 
-        v3 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
+//        v3 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], I_syn_half + nv.Inoise[n] + nv.Ie[n], h);
+        v3 = hh_Vm(nv.V[n], nv.n[n], nv.m[n], nv.h[n], (nv.Isyn[n] + Isyn_new)*0.5f + nv.Inoise[n] + nv.Ie[n], h);
         n3 = hh_n_ch(nv.V[n], nv.n[n], h);
         m3 = hh_m_ch(nv.V[n], nv.m[n], h);
         h3 = hh_h_ch(nv.V[n], nv.h[n], h);
