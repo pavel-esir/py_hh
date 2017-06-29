@@ -23,11 +23,11 @@ def getDelays(N, seed=0, x0=20.0):
     x1 = x0*random.rand(N)
     x2 = x0*random.rand(N)
     d += (x1 - x2)**2
-    return d
+    return np.sqrt(d)
 if __name__ == "__main__":
     x0 = 10
     d = getDelays(2000, x0=x0)
     pl.figure(1)
-    pl.hist(np.sqrt(d), bins=100, range=(0, np.sqrt(3)*x0), normed=True, histtype='step')
+    pl.hist(d, bins=100, range=(0, np.sqrt(3)*x0), normed=True, histtype='step')
     
     pl.show()
