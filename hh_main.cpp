@@ -104,7 +104,8 @@ void freeMemory(){
     cudaFree(hh::incSpikes.numProcessed);
 }
 
-void set_calc_params(unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h){
+void set_calc_params(unsigned int devIdx, unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h){
+    cudaSetDevice(devIdx);
     if (firstRun){
         firstRun = false;
     } else {
