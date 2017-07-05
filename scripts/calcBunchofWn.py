@@ -105,7 +105,7 @@ nums = np.zeros(Nneur, dtype='uint32') + 1
 incTimes = np.zeros((NnumSp, Nneur), dtype='uint32')
 incSpWeights = np.zeros((NnumSp, Nneur), dtype=fltSize) + wInc*np.e/tau_psc
 #%%
-phh.setCalcParams(rank, Tsim, Tcutoff, Nneur, Ncon*nw, recInt, h)
+phh.setCalcParams(Tsim, Tcutoff, Nneur, Ncon*nw, recInt, h, rank)
 
 phh.setIncomSpikes(incTimes, nums, incSpWeights, NnumSp)
 phh.setNeurVars(Vm, Vrec, ns, ms, hs)

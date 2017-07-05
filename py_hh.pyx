@@ -29,7 +29,7 @@ def setSpikeTimes(np.ndarray[np.uint32_t, ndim=2] spike_time, np.ndarray[np.uint
 def setConns(np.ndarray[np.float32_t, ndim=1] weight, np.ndarray[np.uint32_t, ndim=1] delay, np.ndarray[np.uint32_t, ndim=1]  pre, np.ndarray[np.uint32_t, ndim=1] post):
     set_conns(<float*> weight.data, <unsigned int*> delay.data, <unsigned int*> pre.data, <unsigned int*> post.data)
 
-def setCalcParams(unsigned int devIdx, unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h):
+def setCalcParams(unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h, unsigned int devIdx = 0):
     set_calc_params(devIdx, Tsim, cutoff_ns_tm, Nneur, Ncon, recInt, h)
 
 def setNeurVars(np.ndarray[np.float32_t, ndim=1] V_m, np.ndarray[np.float32_t, ndim=2] Vrec, 
