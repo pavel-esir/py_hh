@@ -105,7 +105,10 @@ void freeMemory(){
 }
 
 void set_calc_params(unsigned int devIdx, unsigned int Tsim, unsigned int cutoff_ns_tm, unsigned int Nneur, unsigned int Ncon, unsigned int recInt, float h){
-    cudaSetDevice(devIdx);
+//     int deviceCount = 0;
+//     cudaGetDeviceCount(&deviceCount);
+//     printf("%u, device count %i\n", devIdx, deviceCount);
+    cudaSetDevice(devIdx % 3);
     if (firstRun){
         firstRun = false;
     } else {

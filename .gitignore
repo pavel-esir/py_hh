@@ -14,3 +14,6 @@ py_hh_cpu.cpp
 !n_cycle.npy
 !m_cycle.npy
 !h_cycle.npy
+*.png
+*.out
+*.txt
