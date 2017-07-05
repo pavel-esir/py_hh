@@ -10,17 +10,18 @@ import numpy as np
 import matplotlib.pylab as pl
 np.random.seed(0)
 
-Ntrans = 40 # length of transient process in periods, integer
+Ntrans = 80 # length of transient process in periods, integer
 T = 20.28
 SimTime = (Ntrans+0.5)*T
 #SimTime = 200.
 h = 0.02
 Tsim = int(SimTime/h)
-recInt = 1
+recInt = 5
 
 tau_psc = 0.2  # ms
-w_p = 1.0      # Poisson noise weith, pA
-w_n = 0.0      # connection weight, pA
+w_p = 2.1      # Poisson noise weith, pA
+w_n = 5.4      # connection weight, pA
+#w_n = .0      # connection weight, pA
 
 #rate = 185.0     # Poisson noise rate, Hz (shouldn't  be 0)
 #Nneur = 100
@@ -36,8 +37,8 @@ Nneur = 2
 Ncon = 2
 pre = np.array([0, 1], dtype='uint32')
 post = np.array([1, 0], dtype='uint32')
-delay = (np.ones(Ncon)*12.0/h).astype('uint32') # delay arrays in time frames
-rate = np.zeros(Nneur, dtype=fltSize) + 200.1     # Poisson noise rate, Hz (shouldn't  be 0)
+delay = (np.ones(Ncon)*4.4/h).astype('uint32') # delay arrays in time frames
+rate = np.zeros(Nneur, dtype=fltSize) + 190.1     # Poisson noise rate, Hz (shouldn't  be 0)
 
 # int(SimTime/10) тут 10 это период в мс максимального ожидаемого интервала между спайками
 spike_times = np.zeros((int(SimTime/10) + 2, Nneur), dtype='uint32')
@@ -45,7 +46,7 @@ num_spikes_neur = np.zeros(Nneur, dtype='uint32')
 
 weight = np.zeros(Ncon, dtype=fltSize) + w_n*np.e/tau_psc
 
-setCalcParams(Tsim, Nneur, Ncon, recInt, h)
+setCalcParams(Tsim, np.iinfo(np.int32).max, Nneur, Ncon, recInt, h)
 
 Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype=fltSize)
 
