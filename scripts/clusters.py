@@ -15,7 +15,7 @@ from distribute_delays import getDelays
 random.seed(0)
 psn_seed = 0
 
-SimTime = 20000.
+SimTime = 10000.
 h = 0.02
 Tcutoff = int(10000./h)
 #Tcutoff = np.iinfo(np.int32).max
@@ -46,10 +46,14 @@ delay = np.zeros(Ncon*nw, dtype='uint32')
 d_w_p = np.zeros(Nneur, dtype=fltSize)
 
 np.random.seed(0)
-preTmp = random.randint(0, N, Ncon).astype('uint32')
-postTmp = random.randint(0, N, Ncon).astype('uint32')
-delaysTmp = (getDelays(Ncon, 0)/h).astype('uint32')
+#preTmp = random.randint(0, N, Ncon).astype('uint32')
+#postTmp = random.randint(0, N, Ncon).astype('uint32')
+##delaysTmp = (getDelays(Ncon, 0)/h).astype('uint32')
 #delaysTmp = np.zeros(Ncon, dtype='uint32') + int(3.5/h)
+
+from cube import getConns, plotConns
+preTmp, postTmp, delaysTmp, coords = getConns(Nneur, Ncon, 0)
+delaysTmp = (delaysTmp/h).astype('uint32')
 
 #preTmp = np.array([0, 1], dtype='uint32')
 #postTmp = np.array([1, 0], dtype='uint32')
@@ -89,6 +93,14 @@ Vm = np.load('../Vm_cycle.npy')[phases].astype(fltSize) + Vmpert
 ns = np.load('../n_cycle.npy')[phases].astype(fltSize)
 ms = np.load('../m_cycle.npy')[phases].astype(fltSize)
 hs = np.load('../h_cycle.npy')[phases].astype(fltSize)
+
+
+#v0, n0, m0, h0 = -60.8457, 0.3763, 0.0833, 0.4636
+#part = int(Nneur*3.5/4.)
+#Vm[:part] = v0
+#ns[:part] = n0
+#ms[:part] = m0
+#hs[:part] = h0
 
 #Ie = 7.134 + 0.01*random.randn(Nneur).astype(fltSize)
 Ie = I0 + 0.0*random.randn(Nneur).astype(fltSize)
@@ -144,10 +156,12 @@ activeNeurs = np.arange(0, Nneur)[lastSpk > SimTime - 40.]
 activePre = pre[np.in1d(pre, activeNeurs)]
 activePost = post[np.in1d(pre, activeNeurs)]
 activeDelays = delay[np.in1d(pre, activeNeurs)]
-
+#%%
+activeDelays = activeDelays[np.in1d(activePost, activeNeurs)]
 activePre = activePre[np.in1d(activePost, activeNeurs)]
 activePost = activePost[np.in1d(activePost, activeNeurs)]
-activeDelays = delay[np.in1d(activePost, activeNeurs)]
+
+plotConns(coords, activePre, activePost)
 
 (f, ax) = pl.subplots(nw, 1, sharex=True, sharey=True)
 if type(ax) != np.ndarray:
@@ -172,18 +186,37 @@ rcParams['font.size'] = 24.
 rcParams['axes.labelsize'] = 24.
 rcParams['lines.linewidth'] = 1.74
 from matplotlib.gridspec import GridSpec
-colors = ['r', 'm', 'y', 'c']
-recIdx = [0, 3, 9]
+colors = ['C0', 'C1', 'C2', 'C3']
+recIdx = [2, 40, 81]
 Nrec = len(recIdx)
 
 fig = pl.figure(figsize=(8*1.5, 6*1.5))
 gs = GridSpec(Nrec + 1, 1, height_ratios=[3, 1, 1, 1])
-ax = [[]]*(Nrec + 1)
+ax = [[]]*(Nrec)
 axSpks = fig.add_subplot(gs[0, 0])
 axHist = axSpks.twinx()
+axHist.hist(spikes[mask.mask]*h/1000, bins=int(SimTime/20), histtype='step', color='C1')
+
 for i in xrange(Nrec):
     ax[i] = fig.add_subplot(gs[Nrec - i, 0], sharex = axSpks)
-    ax[i].plot(np.linspace(0, SimTime/1000, int((Tsim + recInt - 1)/recInt)), Vrec[:, 1], lw=1., colors)
-    
-axHist.hist(spikes[mask.mask]*h/1000, bins=int(SimTime/20), histtype='step', color='C1')
-axSpks.plot(spikes[mask.mask]*h/1000, senders[mask.mask] - idx*N, '.')
+    ax[i].plot(np.linspace(0, SimTime/1000, int((Tsim + recInt - 1)/recInt)), Vrec[:, recIdx[i]], lw=1., color=colors[i])
+    tm = spike_times[:num_spikes_neur[recIdx[i]], recIdx[i]]*h/1000
+    axSpks.scatter(tm, [recIdx[i]]*len(tm), s=50, edgecolors=colors[i], facecolors=colors[i])
+    pl.setp(ax[i].get_xticklabels(), visible=False)
+axSpks.plot(spikes[mask.mask]*h/1000, senders[mask.mask] - idx*N, '.k', ms = 5)
+
+pl.setp(axSpks.get_xticklabels(), visible=False)
+pl.setp(ax[0].get_xticklabels(), visible=True)
+axSpks.set_xlim([0, SimTime/1000])
+#axSpks.set_xlim([9.88, SimTime/1000])
+axSpks.set_ylim([0, 100])
+axHist.set_ylim([0, 100])
+
+axHist.set_yticks([0, 50, 100])
+axSpks.set_yticks([0, 50, 100])
+
+
+axSpks.set_ylabel('Neuron number')
+axHist.set_ylabel('Firing rate')
+ax[1].set_ylabel('$V_m, mV$')
+ax[0].set_xlabel('$t, s$')
