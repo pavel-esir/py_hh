@@ -189,7 +189,7 @@ void integrate_neurons(unsigned int t, unsigned int Nneur, float h, float *rate,
 
         if (t % rv.interval == 0){
             rv.V[Nneur*t/rv.interval + n] = nv.V[n];
-            //rv.V[Nneur*t/rv.interval + n] = nv.Isyn[n];
+//             rv.V[Nneur*t/rv.interval + n] = nv.Isyn[n];
         }
     }
 }
@@ -200,6 +200,7 @@ void init_noise(unsigned int seed, unsigned int Nneur, float h, float *rate, uns
     if (i < Nneur){
         psn_seed[i] = 100000*(seed + i + 1);
         psn_time[i] = 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate[i]*h));
+//         psn_time[i] = (unsigned int) 4000.0f/h + 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate[i]*h));
     }
 }
 

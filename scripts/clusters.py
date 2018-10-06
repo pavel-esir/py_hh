@@ -12,12 +12,13 @@ import py_hh as phh
 import numpy as np
 from numpy import random
 import matplotlib.pylab as pl
+from matplotlib.gridspec import GridSpec
 from distribute_delays import getDelays
 import numpy.ma as ma
+fs = 26.
 
-random.seed(0)
 psn_seed = 0
-iv_seed = 2
+iv_seed = 3
 
 SimTime = 30000
 h = 0.02
@@ -28,12 +29,13 @@ recInt = np.iinfo(np.int32).max
 
 w_ps = np.arange(1.85, 2.001, 0.01)
 w_ps = [1.97]
+#w_ps = [0.5]
 nw = len(w_ps)
 
 N = 100
 Nneur = N*nw
 
-tau_psc = 0.2   # ms
+tau_psc = 0.2   # ms.
 w_n = 1.3       # connection weight, pA
 I0 = 5.27
 
@@ -48,9 +50,6 @@ delay = np.zeros(Ncon*nw, dtype='uint32')
 d_w_p = np.zeros(Nneur, dtype=fltSize)
 
 np.random.seed(0)
-#from cube import getConns, plotConns
-#preTmp, postTmp, delaysTmp, coords = getConns(Nneur, Ncon, 0, 20.0)
-#delaysTmp = (delaysTmp/h).astype('uint32')
 
 preTmp = random.randint(0, N, Ncon).astype('uint32')
 postTmp = random.randint(0, N, Ncon).astype('uint32')
@@ -69,21 +68,20 @@ num_spikes_neur = np.zeros(Nneur, dtype='uint32')
 
 Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype=fltSize)
 
-v0, n0, m0, h0 = 32.906693, 0.574676, 0.913177, 0.223994
+##v0, n0, m0, h0 = 32.906693, 0.574676, 0.913177, 0.223994
 #v0, n0, m0, h0 = -60.8457, 0.3763, 0.0833, 0.4636
-Vm = np.zeros(Nneur, dtype=fltSize) + v0
-ns = np.zeros(Nneur, dtype=fltSize) + n0
-ms = np.zeros(Nneur, dtype=fltSize) + m0
-hs = np.zeros(Nneur, dtype=fltSize) + h0
+#Vm = np.zeros(Nneur, dtype=fltSize) + v0
+#ns = np.zeros(Nneur, dtype=fltSize) + n0
+#ms = np.zeros(Nneur, dtype=fltSize) + m0
+#hs = np.zeros(Nneur, dtype=fltSize) + h0
 
-#np.random.seed(iv_seed)
-#Vmpert = 0.1*np.random.rand(Nneur).astype(fltSize)
-#np.random.seed(3)
-#phases = random.choice(len(np.load('../Vm_cycle.npy')), Nneur)
-#Vm = np.load('../Vm_cycle.npy')[phases].astype(fltSize) + Vmpert
-#ns = np.load('../n_cycle.npy')[phases].astype(fltSize)
-#ms = np.load('../m_cycle.npy')[phases].astype(fltSize)
-#hs = np.load('../h_cycle.npy')[phases].astype(fltSize)
+np.random.seed(iv_seed)
+Vmpert = 0.1*np.random.rand(Nneur).astype(fltSize)
+phases = random.choice(len(np.load('../Vm_cycle.npy')), Nneur)
+Vm = np.load('../Vm_cycle.npy')[phases].astype(fltSize) + Vmpert
+ns = np.load('../n_cycle.npy')[phases].astype(fltSize)
+ms = np.load('../m_cycle.npy')[phases].astype(fltSize)
+hs = np.load('../h_cycle.npy')[phases].astype(fltSize)
 
 Ie = I0 + 0.0*random.randn(Nneur).astype(fltSize)
 y = np.zeros(Nneur, dtype=fltSize)
@@ -114,81 +112,67 @@ for i, nsp in zip(xrange(1, Nneur), num_spikes_neur[1:]):
     spikes = np.concatenate((spikes, spike_times[:nsp, i]))
     senders = np.concatenate((senders, [i]*nsp))
 #%%
-#from matplotlib import rcParams
-#rcParams['font.family'] = 'serif'
-#rcParams['font.serif'] = 'FreeSerif'
-#rcParams['font.size'] = 24.
-#rcParams['axes.labelsize'] = 24.
-#rcParams['lines.linewidth'] = 1.74
-#from matplotlib.gridspec import GridSpec
 #colors = ['C0', 'C1', 'C2', 'C3']
-#recIdx = [2, 40, 81]
+#recIdx = [9, 40, 92]
+##recIdx = [9, 48, 94]
 #Nrec = len(recIdx)
 #
 #fig = pl.figure(figsize=(8*1.5, 6*1.5))
-#gs = GridSpec(Nrec + 2, 1, height_ratios=[0.8, 2.5, 1, 1, 1])
+#gs = GridSpec(Nrec + 1, 1, height_ratios=[2.5, 1, 1, 1])
 #ax = [[]]*(Nrec)
 #
-#axHist = fig.add_subplot(gs[0, 0])
-#pl.setp(axHist.get_xticklabels(), visible=False)
-#
-#axSpks = fig.add_subplot(gs[1, 0], sharex=axHist)
-#
-##axHist = axSpks.twinx()
+#axSpks = fig.add_subplot(gs[0, 0])
 #
 #mask = ma.masked_inside(senders, 0, N - 1)
-#axHist.hist(spikes[mask.mask]*h/1000, bins=int(SimTime/20), histtype='step', color='C3', lw=3.)
 #
 #for i in xrange(Nrec):
-#    ax[i] = fig.add_subplot(gs[1 + Nrec - i, 0], sharex = axSpks)
+#    ax[i] = fig.add_subplot(gs[0 + Nrec - i, 0], sharex = axSpks)
 #    ax[i].plot(np.linspace(0, SimTime/1000., int((Tsim + recInt - 1)/recInt)), Vrec[:, recIdx[i]], lw=1., color=colors[i])
 #    tm = spike_times[:num_spikes_neur[recIdx[i]], recIdx[i]]*h/1000
-#    axSpks.scatter(tm, [recIdx[i]]*len(tm), s=50, edgecolors=colors[i], facecolors=colors[i], zorder=10)
+##    axSpks.scatter(tm, [recIdx[i]]*len(tm), s=50, edgecolors=colors[i], facecolors=colors[i], zorder=10)
 #    pl.setp(ax[i].get_xticklabels(), visible=False)
-#axSpks.plot(spikes[mask.mask]*h/1000, senders[mask.mask] - idx*N, '.k', ms = 5)
 #
+#axSpks.plot(spikes[mask.mask]*h/1000, senders[mask.mask] - idx*N, '.k', ms = 5)
 #pl.setp(axSpks.get_xticklabels(), visible=False)
+#
 #pl.setp(ax[0].get_xticklabels(), visible=True)
-##axSpks.set_xlim([0, SimTime/1000])
-##axSpks.set_xlim([3.88, 3.99])
 ##axSpks.set_xlim([0.0, 2.5])
 #axSpks.set_xlim([2.25, 2.5])
+##axSpks.set_xlim([2.5, 3.])
 #axSpks.set_ylim([0, 100])
-##axHist.set_ylim([0, 100])
 #
-#axHist.set_yticks([0, 50, 100])
 #axSpks.set_yticks([0, 50, 100])
 #
-#
-#axSpks.set_ylabel('Neuron number')
-#axHist.set_ylabel('Firing rate')
-#ax[1].set_ylabel('$V_m, mV$')
-#ax[0].set_xlabel('$t, s$')
-#pl.subplots_adjust(left = 0.10, right = 0.9, top = 0.95, bottom = 0.10, hspace = 0.19)
-##pl.savefig('cluster_iv_{}.png'.format(iv_seed), dpi=256.0)
-##pl.savefig('cluster_iv_{}_zoomed.png'.format(iv_seed), dpi=256.0)
+#axSpks.set_ylabel('Neuron number', fontsize=fs)
+#ax[1].set_ylabel('$V_m\ (mV)$', fontsize=fs)
+#ax[0].set_xlabel('$time\ (s)$', fontsize=fs)
+#pl.subplots_adjust(left = 0.10, right = 0.9, top = 0.95, bottom = 0.11, hspace = 0.19)
+#pl.savefig('cluster_iv_{}.png'.format(iv_seed), dpi=256.0)
+#pl.savefig('cluster_iv_{}_zoomed.png'.format(iv_seed), dpi=256.0)
 #pl.savefig('nodelay_synchrony.png', dpi=256.0)
 #%%
 fig = pl.figure(figsize=(8*1.5, 6*1.5))
-axSpks = pl.gca()
-axHist = axSpks.twinx()
+
+gs = GridSpec(2, 1, height_ratios=[3, 1])
+axSpks = fig.add_subplot(gs[0])
+axHist = fig.add_subplot(gs[1], sharex=axSpks)
+
 mask = ma.masked_inside(senders, 0, N - 1)
-axHist.hist(spikes[mask.mask]*h/1000, bins=int(SimTime/20.), histtype='step', color='C1', lw=3.)
+axHist.hist(spikes[mask.mask]*h/1000, bins=int(SimTime/20.), color='C3', ls='-', histtype='step', lw=3.)
 
-axSpks.plot(spikes[mask.mask]*h/1000, senders[mask.mask] - idx*N, '.k', ms = 5)
+axSpks.plot(spikes[mask.mask]*h/1000, senders[mask.mask], marker='.', ls='', color='k', ms = 5)
 
-axSpks.set_xlim([4.0, 28.1])
+axSpks.set_xlim([4.0, 25.1])
 axSpks.set_xticks(np.arange(4., 25.1, 3.))
 axSpks.set_ylim([0, 100])
 
-axHist.set_yticks([0, 50, 100])
-axHist.set_ylim([0, 120])
+axHist.set_yticks([50, 100])
+axHist.set_ylim([0, 100])
 axSpks.set_yticks([0, 50, 100])
 
-
-axSpks.set_ylabel('Neuron number')
-axHist.set_ylabel('Firing rate')
-axSpks.set_xlabel('$t, s$')
-#axSpks.vlines(4, 0, 100, lw=3., color='C3')
-pl.subplots_adjust(left = 0.10, right = 0.9, top = 0.95, bottom = 0.10, hspace = 0.08)
+axSpks.set_ylabel('Neuron number', fontsize=fs)
+axHist.set_ylabel('Firing rate', fontsize=fs)
+axHist.set_xlabel('$time\ (s)$', fontsize=fs)
+pl.setp(axSpks.get_xticklabels(), visible=False)
+pl.subplots_adjust(top = 0.97, bottom = 0.10, left = 0.10, right = 0.95, hspace = 0.08)
 pl.savefig('cluster_iv_{}_with_noise_{}.png'.format(iv_seed, w_ps[0]), dpi=256.0)

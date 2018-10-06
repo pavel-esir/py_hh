@@ -39,20 +39,18 @@ def plotConns(coord, pre, post):
 
     fig = pl.figure(figsize=(11, 9))
     ax = fig.add_subplot(111, projection='3d')
+
     for i in xrange(len(pre)):
         ax.plot([preX1[i], postX1[i]], [preX2[i], postX2[i]], [preX3[i], postX3[i]], '-o', lw=0.1, color='k', ms=2., mec='b')    
-#    ax.set_xticks((0, 10, 20))
-#    ax.set_yticks((0, 10, 20))
-#    ax.set_zticks((0, 10, 20))
-#    ax.set_xlim((0, 20))
-#    ax.set_ylim((0, 20))
-#    ax.set_zlim((0, 20))
     ax.set_xticks((0., 0.5, 1))
     ax.set_yticks((0., 0.5, 1))
     ax.set_zticks((0., 0.5, 1))
     ax.set_xlim((-0.05, 1.05))
     ax.set_ylim((-0.05, 1.05))
     ax.set_zlim((-0.05, 1.05))
+    ax.set_xlabel("x (mm)", labelpad=15.)
+    ax.set_ylabel("y (mm)", labelpad=15.)
+    ax.set_zlabel("z (mm)", labelpad=15.)
     
 if __name__ == "__main__":
     pre, post, delay, coord = getConns(100, 2000, 0, 1.)
