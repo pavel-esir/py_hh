@@ -23,9 +23,9 @@ w_p = 0.0      # Poisson noise weith, pA
 w_n = 0.0      # connection weight, pA
 wInc = 1.3
 
-rate = 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
-dT = 0.04
+dT = 0.2
 Nneur = int(T/dT)**2
+rate = np.zeros(Nneur, dtype=fltSize) + 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
 Ncon = 1
 pre = np.random.randint(0, Nneur, Ncon).astype('uint32')
 post = np.random.randint(0, Nneur, Ncon).astype('uint32')
@@ -38,7 +38,7 @@ num_spikes_neur = np.zeros(Nneur, dtype='uint32')
 
 weight = np.zeros(Ncon, dtype=fltSize) + w_n*np.e/tau_psc
 
-setCalcParams(Tsim, Nneur, Ncon, recInt, h)
+setCalcParams(Tsim, np.iinfo(np.int32).max, Nneur, Ncon, recInt, h)
 
 Vm = np.zeros(Nneur, dtype=fltSize) + 32.906693
 Vrec = np.zeros((int((Tsim  + recInt - 1)/recInt), Nneur), dtype=fltSize)

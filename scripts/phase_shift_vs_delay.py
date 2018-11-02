@@ -21,7 +21,6 @@ recInt = 800
 I = 5.27
 w = 1.0
 w_p = 0.00
-rate = 50.0 # Hz
 tau_psc = 0.2
 
 dDelay = 0.1
@@ -33,6 +32,8 @@ Ndelays = len(delaysRange)
 Nphis = len(phisRange)
 Nneur = Ndelays*Nphis*2
 Ncon = Ndelays*Nphis*2
+
+rate = np.zeros(Nneur, dtype=fltSize) + 50.0 # Hz
 
 delays = np.zeros(Ncon, dtype='uint32')
 pre = np.zeros(Ncon, dtype='uint32')
@@ -73,7 +74,7 @@ y = np.zeros(Nneur, dtype=fltSize)
 Isyn = np.zeros(Nneur, dtype=fltSize)
 d_w_p = np.zeros(Nneur, dtype=fltSize) + w_p*np.e/tau_psc
 
-phh.setCalcParams(Tsim, Nneur, Ncon, recInt, h)
+phh.setCalcParams(Tsim, np.iinfo(np.int32).max, Nneur, Ncon, recInt, h)
 phh.setIncomSpikes(incTimes, nums, incSpWeights, 1)
 phh.setNeurVars(Vm, Vrec, ns, ms, hs)
 phh.setCurrents(Ie, y, Isyn, rate, tau_psc, d_w_p, 0)

@@ -23,20 +23,20 @@ Tsim = int(SimTime/h)
 recInt = np.iinfo(np.int32).max
 #recInt = 4
 
-w_ps = np.arange(1.90, 2.001, 0.01)
+w_ps = np.arange(1.87, 1.951, 0.02)
 #w_ps = [1.93]
 nw = len(w_ps)
 
-N = 100
+N = 64
 Nneur = N*nw
 
 tau_psc = 0.2   # ms
-w_n = 1.3       # connection weight, pA
+w_n = 1.54       # connection weight, pA
 I0 = 5.27
 
 rate = np.zeros(Nneur, dtype=fltSize) + 185.0    # Poisson noise rate, Hz (shouldn't  be 0)
 
-pcon = 0.2
+pcon = 0.25
 Ncon = int(N*N*pcon)
 
 #Ncon = 2
@@ -49,7 +49,7 @@ np.random.seed(0)
 preTmp = random.randint(0, N, Ncon).astype('uint32')
 postTmp = random.randint(0, N, Ncon).astype('uint32')
 delaysTmp = (getDelays(Ncon, 0)/h).astype('uint32')
-#delaysTmp = np.zeros(Ncon, dtype='uint32') + int(3.5/h)
+delaysTmp = np.zeros(Ncon, dtype='uint32') + int(3.5/h)
 
 #preTmp = np.array([0, 1], dtype='uint32')
 #postTmp = np.array([1, 0], dtype='uint32')
