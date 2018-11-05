@@ -9,8 +9,9 @@ from py_hh import *
 import numpy as np
 import matplotlib.pylab as pl
 np.random.seed(0)
+psn_seed = 1
 
-Ntrans = 80 # length of transient process in periods, integer
+Ntrans = 280 # length of transient process in periods, integer
 T = 20.28
 SimTime = (Ntrans+0.5)*T
 #SimTime = 200.
@@ -19,8 +20,8 @@ Tsim = int(SimTime/h)
 recInt = 5
 
 tau_psc = 0.2  # ms
-w_p = 2.1      # Poisson noise weith, pA
-w_n = 5.4      # connection weight, pA
+w_p = 2.0      # Poisson noise weith, pA
+w_n = 5.0      # connection weight, pA
 #w_n = .0      # connection weight, pA
 
 #rate = 185.0     # Poisson noise rate, Hz (shouldn't  be 0)
@@ -37,8 +38,9 @@ Nneur = 2
 Ncon = 2
 pre = np.array([0, 1], dtype='uint32')
 post = np.array([1, 0], dtype='uint32')
-delay = (np.ones(Ncon)*4.4/h).astype('uint32') # delay arrays in time frames
-rate = np.zeros(Nneur, dtype=fltSize) + 190.1     # Poisson noise rate, Hz (shouldn't  be 0)
+delay = (np.ones(Ncon)*4.5/h).astype('uint32') # delay arrays in time frames
+#delay = (np.ones(Ncon)*0.0/h).astype('uint32') # delay arrays in time frames
+rate = np.zeros(Nneur, dtype=fltSize) + 200     # Poisson noise rate, Hz (shouldn't  be 0)
 
 # int(SimTime/10) тут 10 это период в мс максимального ожидаемого интервала между спайками
 spike_times = np.zeros((int(SimTime/10) + 2, Nneur), dtype='uint32')
@@ -55,7 +57,7 @@ Vm = np.zeros(Nneur, dtype=fltSize) + v0
 ns = np.zeros(Nneur, dtype=fltSize) + n0
 ms = np.zeros(Nneur, dtype=fltSize) + m0
 hs = np.zeros(Nneur, dtype=fltSize) + h0
-dPhase = int(13.0/0.02)
+dPhase = int(10.0/0.02)
 Vm[1] = np.load('../Vm_cycle.npy')[dPhase]
 ns[1] = np.load('../n_cycle.npy')[dPhase]
 ms[1] = np.load('../m_cycle.npy')[dPhase]
@@ -88,7 +90,7 @@ Isyn = np.zeros(Nneur, dtype=fltSize)
 d_w_p = np.zeros(Nneur, dtype=fltSize) + w_p*np.e/tau_psc
 
 setNeurVars(Vm, Vrec, ns, ms, hs)
-setCurrents(Ie, y, Isyn, rate, tau_psc, d_w_p, 0)
+setCurrents(Ie, y, Isyn, rate, tau_psc, d_w_p, psn_seed)
 
 setSpikeTimes(spike_times, num_spikes_neur, np.shape(spike_times)[0]*Nneur)
 
@@ -100,8 +102,8 @@ if num_spikes_neur[0] > int(Ntrans/2)and num_spikes_neur[1] > int(Ntrans/2):
 #%%
 pl.figure()
 pl.plot(np.linspace(0, SimTime, int((Tsim + recInt - 1)/recInt)), Vrec[:, :10])
-pl.xlabel('time, ms')
-pl.ylabel('Membrane potential, mV')
+pl.xlabel('time (ms)')
+pl.ylabel('Membrane potential (mV)')
 pl.show()
 pl.xlim((0, SimTime))
 #np.save('h_cycle.npy', Vrec[4054:5069, 0])

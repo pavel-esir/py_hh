@@ -199,8 +199,8 @@ void init_noise(unsigned int seed, unsigned int Nneur, float h, float *rate, uns
     unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < Nneur){
         psn_seed[i] = 100000*(seed + i + 1);
-        psn_time[i] = 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate[i]*h));
-//         psn_time[i] = (unsigned int) 4000.0f/h + 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate[i]*h));
+//         psn_time[i] = 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate[i]*h));
+        psn_time[i] = (unsigned int) 200.0f/h + 1 + (unsigned int) (-1000.0f*log(get_random(psn_seed + i))/(rate[i]*h));
     }
 }
 

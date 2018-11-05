@@ -21,9 +21,9 @@ recInt = 1000
 tau_psc = 0.2  # ms
 w_p = 0.0      # Poisson noise weith, pA
 w_n = 0.0      # connection weight, pA
-wInc = 1.3
+wInc = 5.0
 
-dT = 0.2
+dT = 0.05
 Nneur = int(T/dT)**2
 rate = np.zeros(Nneur, dtype=fltSize) + 0.1     # Poisson noise rate, Hz (shouldn't  be 0)
 Ncon = 1
